@@ -5,9 +5,10 @@
   </div>
 </template>
 
-<style>
+<style lang="scss">
 .app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  color: base.$slate-gray;
+  font-family: 'Roboto', Roboto, sans-serif;
   position: absolute;
   left: 0;
   top: 0;
@@ -15,6 +16,18 @@
 }
 
 .container {
-  padding: 0 96px;
+  padding: 48px 144px;
+  background-color: base.$light-gray;
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+
+  @media(max-width: 1440px) {
+    padding: 48px 72px;
+  }
+
+  @media(max-width: 1280px) {
+    padding: 48px 36px;
+  }
 }
 </style>
