@@ -26,15 +26,30 @@
         v-if="props.isFocused"
         class="header-catalog-menu"
     >
-      <div
-          v-for="(item, index) of store.catalog"
-          :key="item.title"
-          class="header-catalog-menu-link"
-          @mouseenter="activeTabIndex = index"
-          :class="{ active : activeTabIndex === index }"
-          @click="navigateTo(!route.path.includes('catalog') ? `catalog/${item.url}` : item.url )"
-      >
-        {{ item.title }}
+      <div class="header-catalog-menu-wrapper">
+        <div class="header-catalog-menu-main">
+          <div class="header-catalog-menu-link"
+               @mouseenter="activeTabIndex = index"
+               :class="{ active : activeTabIndex === index }"
+               @click="navigateTo(`/catalog/${item.url}`)"
+               v-for="(item, index) of store.catalog"
+               :key="item.title"
+          >
+            <span>{{ item.title }}</span>
+          </div>
+        </div>
+
+        <div v-if="store.activeTab" class="header-catalog-submenu">
+          <div
+              v-for="(item, index) of store[activeTab]"
+              :key="item.url"
+              @click="navigateTo(item.url)"
+              :class="index === 0 ? 'header-catalog-submenu-link-title' : 'header-catalog-submenu-link'"
+          >
+            {{ item.title }}
+            <span v-if="index !== 0" class="header-catalog-submenu-link-caption">{{ Math.trunc((Math.random() * 100)) }}</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -42,13 +57,16 @@
 
 <script setup>
 import {useRoute} from 'vue-router';
+
 const route = useRoute();
 
 import {useCatalogStore} from "~/store/catalog.ts";
+
 const store = useCatalogStore()
 
 const isLinkHovered = ref(false);
 const activeTabIndex = ref(0)
+const activeTab = ref(store.activeTab.split('-').join('_'))
 
 const props = defineProps({
   isFocused: Boolean,
@@ -65,6 +83,13 @@ const toggleCatalog = () => {
 
 watch(() => props.isFocused, () => {
   isCatalogOpened.value = props.isFocused;
+})
+
+watch(activeTabIndex, () => {
+  if (store.catalog[activeTabIndex.value]) {
+    store.activeTab = store.catalog[activeTabIndex.value].url
+    activeTab.value = store.activeTab.split('-').join('_')
+  }
 })
 </script>
 
@@ -135,11 +160,50 @@ watch(() => props.isFocused, () => {
     font-size: 16px;
     width: 100%;
 
+    &-wrapper {
+      display: flex;
+    }
+
     &-link {
       cursor: pointer;
       padding: 8px 12px;
       font-weight: 500;
-      //margin: 0 0 24px -2px;
+      white-space: nowrap;
+    }
+  }
+
+  &-submenu {
+    background: #ffffff;
+    padding: 24px;
+    //position: absolute;
+    //top: 0;
+
+    &-link {
+      font-size: 14px;
+      white-space: nowrap; // Prevents breaking onto multiple lines
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      &:hover {
+        color: base.$secondary-color;
+      }
+
+      &-title {
+        font-weight: bold;
+        margin-bottom: 12px;
+        padding-top: 8px;
+        transition: 0.3s ease-in-out;
+        grid-column: span 4;
+
+        &:hover {
+          color: base.$secondary-color;
+          transition: 0.3s ease-in-out;
+        }
+      }
+
+      &-caption {
+        color: base.$dark-gray;
+      }
     }
   }
 }

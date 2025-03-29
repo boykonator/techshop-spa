@@ -14,7 +14,7 @@
               v-for="item of menu"
               :key="item.name"
               class="header-link"
-              @click="navigateTo(item.url)">
+              @click="navigateTo(`/${item.url}`)">
             <div>
               <Icon :iconName="item.icon" />
             </div>

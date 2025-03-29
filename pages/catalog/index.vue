@@ -5,7 +5,7 @@
       <div class="catalog-content-card"
            v-for="item in store.catalog"
            :key="item.title"
-           @click="navigateTo(`catalog/${item.url}`)"
+           @click="navigateTo(`/catalog/${item.url}`)"
       >
         <div class="catalog-content-card-image">
 
