@@ -5,6 +5,8 @@
     <nav>
       <div class="header">
 
+        <div style="cursor: pointer" @click="navigateTo('/admin')">admin</div>
+
         <HeaderCatalog v-model:isFocused="isFocusedCatalog" :style="{ zIndex: isFocusedCatalog ? 9 : '' }"/>
 
         <HeaderInput v-model:isFocused="isFocusedInput" :style="{ zIndex: isFocusedCatalog ? 1 : '' }"/>
@@ -21,7 +23,7 @@
             {{ item.name }}
           </div>
 
-          <div v-if="!user" class="header-link">
+          <div v-if="!Object.keys(store.user).length" class="header-link">
             <div>
               <Icon iconName="user" />
             </div>
@@ -34,7 +36,9 @@
 </template>
 
 <script setup lang="ts">
-const user = ref(false)
+import {useCatalogStore} from "~/store/catalog.ts";
+const store = useCatalogStore()
+
 const isFocusedInput = ref(false)
 const isFocusedCatalog = ref(false)
 
@@ -47,9 +51,7 @@ const menu: {name: string, url: string, icon: string}[] = [
 ]
 
 const toggleFocus = () => {
-  console.log('toggleFocus', isFocusedCatalog.value)
   if (isFocusedInput.value || isFocusedCatalog.value) {
-    console.log('inner toggle')
     isFocusedInput.value = false
     isFocusedCatalog.value = false
   }

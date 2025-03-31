@@ -22,24 +22,22 @@
       <span>V</span>
     </div>
 
-    <div
-        v-if="props.isFocused"
-        class="header-catalog-menu"
-    >
-      <div class="header-catalog-menu-wrapper">
-        <div class="header-catalog-menu-main">
-          <div class="header-catalog-menu-link"
-               @mouseenter="activeTabIndex = index"
-               :class="{ active : activeTabIndex === index }"
-               @click="navigateTo(`/catalog/${item.url}`)"
-               v-for="(item, index) of store.catalog"
-               :key="item.title"
-          >
-            <span>{{ item.title }}</span>
-          </div>
-        </div>
 
-        <div v-if="store.activeTab" class="header-catalog-submenu">
+    <div v-if="isCatalogOpened" class="header-catalog-wrapper">
+      <div class="header-catalog-menu">
+        <div class="header-catalog-menu-link"
+             @mouseenter="activeTabIndex = index"
+             :class="{ active : activeTabIndex === index }"
+             @click="navigateTo(`/catalog/${item.url}`)"
+             v-for="(item, index) of store.catalog"
+             :key="item.title"
+        >
+          <span>{{ item.title }}</span>
+        </div>
+      </div>
+
+      <div class="header-catalog-submenu-wrapper">
+        <div class="header-catalog-submenu" v-if="store.activeTab">
           <div
               v-for="(item, index) of store[activeTab]"
               :key="item.url"
@@ -47,21 +45,61 @@
               :class="index === 0 ? 'header-catalog-submenu-link-title' : 'header-catalog-submenu-link'"
           >
             {{ item.title }}
-            <span v-if="index !== 0" class="header-catalog-submenu-link-caption">{{ Math.trunc((Math.random() * 100)) }}</span>
+            <span v-if="index !== 0" class="header-catalog-submenu-link-caption">{{
+                Math.trunc((Math.random() * 100) + 1)
+              }}</span>
+          </div>
+        </div>
+        <div class="header-catalog-submenu" v-if="store.activeTab">
+          <div
+              v-for="(item, index) of store[activeTab]"
+              :key="item.url"
+              @click="navigateTo(item.url)"
+              :class="index === 0 ? 'header-catalog-submenu-link-title' : 'header-catalog-submenu-link'"
+          >
+            {{ item.title }}
+            <span v-if="index !== 0" class="header-catalog-submenu-link-caption">{{
+                Math.trunc((Math.random() * 100) + 1)
+              }}</span>
+          </div>
+        </div>
+        <div class="header-catalog-submenu" v-if="store.activeTab">
+          <div
+              v-for="(item, index) of store[activeTab]"
+              :key="item.url"
+              @click="navigateTo(item.url)"
+              :class="index === 0 ? 'header-catalog-submenu-link-title' : 'header-catalog-submenu-link'"
+          >
+            {{ item.title }}
+            <span v-if="index !== 0" class="header-catalog-submenu-link-caption">{{
+                Math.trunc((Math.random() * 100) + 1)
+              }}</span>
+          </div>
+        </div>
+        <div class="header-catalog-submenu" v-if="store.activeTab">
+          <div
+              v-for="(item, index) of store[activeTab]"
+              :key="item.url"
+              @click="navigateTo(item.url)"
+              :class="index === 0 ? 'header-catalog-submenu-link-title' : 'header-catalog-submenu-link'"
+          >
+            {{ item.title }}
+            <span v-if="index !== 0" class="header-catalog-submenu-link-caption">{{
+                Math.trunc((Math.random() * 100) + 1)
+              }}</span>
           </div>
         </div>
       </div>
+
     </div>
   </div>
 </template>
 
 <script setup>
 import {useRoute} from 'vue-router';
-
 const route = useRoute();
 
 import {useCatalogStore} from "~/store/catalog.ts";
-
 const store = useCatalogStore()
 
 const isLinkHovered = ref(false);
@@ -150,19 +188,19 @@ watch(activeTabIndex, () => {
     }
   }
 
-  &-menu {
+  &-wrapper {
+    display: grid;
     background: #fff;
     color: base.$slate-gray;
     position: absolute;
     top: 64px;
     border-radius: 12px;
-    padding: 24px 8px 24px 0;
     font-size: 16px;
-    width: 100%;
+    grid-template-columns: repeat(4, 1fr);
+  }
 
-    &-wrapper {
-      display: flex;
-    }
+  &-menu {
+    padding: 24px 8px 24px 0;
 
     &-link {
       cursor: pointer;
@@ -173,16 +211,22 @@ watch(activeTabIndex, () => {
   }
 
   &-submenu {
+    position: relative;
     background: #ffffff;
     padding: 24px;
-    //position: absolute;
-    //top: 0;
+    border-radius: 12px;
+
+    &-wrapper {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+    }
 
     &-link {
       font-size: 14px;
-      white-space: nowrap; // Prevents breaking onto multiple lines
+      white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      line-height: 20px;
 
       &:hover {
         color: base.$secondary-color;
