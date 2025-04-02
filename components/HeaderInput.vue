@@ -10,18 +10,22 @@
         placeholder="Поиск по сайту"
         class="header-input"
         @focus="toggleInput(true)"
+        @blur="toggleInput(false)"
     >
     <div class="header-input-icons">
-            <span
-                class="header-input-icon"
-                v-if="input.length"
-                @click="input = ''; toggleInput(true)"
-            >X</span>
-      <span class="header-input-icon-divider" v-if="input.length" ></span>
-      <span
-          class="header-input-icon"
-          @click="toggleInput(true)"
-      >Q</span>
+      <span class="header-input-icon"
+            v-if="input.length && isFocused"
+            @mousedown.prevent
+            @click="input = ''; toggleInput(true)"
+      >
+        <Icon name="cross" size="28"/>
+      </span>
+
+      <span class="header-input-icon-divider" v-if="input.length && isFocused"/>
+
+      <span class="header-input-icon" @click="toggleInput(true)">
+        <Icon name="search" size="28"/>
+      </span>
     </div>
   </div>
 </template>
@@ -29,94 +33,95 @@
 <script setup>
 const input = ref('')
 const isHovered = ref(false)
-
+const isFocused = ref(false)
 
 const emit = defineEmits(['update:isFocused'])
 
 const toggleInput = (value) => {
+  isFocused.value = value
   emit('update:isFocused', value)
 }
 </script>
 
 <style scoped lang="scss">
-.header {
-  &-input {
-    width: 40vw;
-    height: 100%;
-    padding: 0 120px 0 28px;
-    font-size: 16px;
-    border-radius: 8px;
-    border: none;
-    outline: none;
-    background-color: base.$light-gray;
-    transition: 0.2s ease-in-out;
-    z-index: 3;
+.header-input {
+  width: 40vw;
+  height: 100%;
+  padding: 0 120px 0 28px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  background-color: $light-gray;
+  transition: 0.2s ease-in-out;
+  z-index: 3;
 
-    @media(max-width: 1200px) {
-      width: 25vw;
-    }
+  @media(max-width: 1200px) {
+    width: 25vw;
+  }
+
+  @media(max-width: 800px) {
+    width: 15vw;
+  }
+
+  &:focus {
+    background-color: #fff;
+    border-color: $light-gray;
+    transition: 0.2s ease-in-out;
+  }
+
+  &:hover:not(:focus) {
+    background-color: #fff;
+    border-color: $light-gray;
+    box-shadow: 0 20px 40px 1px $mid-gray;
+    transition: 0.2s ease-in-out;
+  }
+
+  &-container {
+    position: relative;
+    height: 100%;
+    z-index: 4;
+    padding: 0 18px;
 
     @media(max-width: 800px) {
-      width: 15vw;
+      padding: 0 8px;
     }
 
-    &:focus {
-      background-color: #fff;
-      border-color: base.$light-gray;
-      transition: 0.2s ease-in-out;
+    @media(max-width: 600px) {
+      display: none;
     }
+  }
 
-    &:hover:not(:focus) {
-      background-color: #fff;
-      border-color: base.$light-gray;
-      box-shadow: 0 20px 40px 1px base.$mid-gray;
-      transition: 0.2s ease-in-out;
-    }
+  &-icons {
+    position: absolute;
+    top: 10px;
+    right: 24px;
+    gap: 2px;
+    color: $dark-gray;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
 
-    &-container {
-      position: relative;
-      height: 100%;
-      align-items: center;
-      z-index: 4;
-      padding: 0 18px;
-
-      @media(max-width: 800px) {
-        padding: 0 8px;
-      }
-
-      @media(max-width: 600px) {
-        display: none;
-      }
-    }
-
-    &-icons {
-      position: absolute;
-      top: 20px;
+    @media(max-width: 1200px) {
       right: 22px;
-      gap: 2px;
-      color: base.$dark-gray;
-      z-index: 5;
+    }
+  }
 
-      @media(max-width: 1200px) {
-        right: 22px;
-      }
+  &-icon {
+    padding: 6px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 0 4px;
+    z-index: 6;
+
+    &:hover {
+      background-color: rgba($mid-gray, 0.2);
     }
 
-    &-icon {
-      padding: 12px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      margin: 4px;
-      z-index: 6;
-
-      &:hover {
-        background-color: rgba(base.$mid-gray, 0.2);
-      }
-
-      &-divider {
-        padding: 6px 0;
-        border: 0.75px solid base.$mid-gray;
-      }
+    &-divider {
+      padding: 10px 0;
+      border: 0.75px solid $mid-gray;
     }
   }
 }

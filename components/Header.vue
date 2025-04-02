@@ -1,33 +1,36 @@
 <template>
   <div>
-    <div v-if="isFocusedInput || isFocusedCatalog" class="focus" @click.self="toggleFocus"></div>
+    <div v-if="isFocusedInput || isFocusedCatalog || store.showLoginModal" class="focus" @click.self="toggleFocus" />
 
     <nav>
       <div class="header">
-
         <div style="cursor: pointer" @click="navigateTo('/admin')">admin</div>
 
-        <HeaderCatalog v-model:isFocused="isFocusedCatalog" :style="{ zIndex: isFocusedCatalog ? 9 : '' }"/>
-
-        <HeaderInput v-model:isFocused="isFocusedInput" :style="{ zIndex: isFocusedCatalog ? 1 : '' }"/>
+        <HeaderCatalog v-model:isFocused="isFocusedCatalog" :style="{ zIndex: isFocusedCatalog ? 9 : 1 }"/>
+        <HeaderInput v-model:isFocused="isFocusedInput" :style="{ zIndex: isFocusedInput ? 9 : 1 }"/>
+        <HeaderLoginModal v-show="store.showLoginModal"/>
 
         <div class="header-link-container">
           <div
               v-for="item of menu"
               :key="item.name"
               class="header-link"
-              @click="navigateTo(`/${item.url}`)">
-            <div>
-              <Icon :iconName="item.icon" />
-            </div>
+              @click="navigateTo(`/${item.url}`)"
+          >
+
+            <Icon :name="item.icon"/>
             {{ item.name }}
           </div>
 
-          <div v-if="!Object.keys(store.user).length" class="header-link">
-            <div>
-              <Icon iconName="user" />
-            </div>
-            Войти
+          <div
+              class="header-link"
+              @mouseenter="showHeaderLogin = true"
+              @mouseleave="showHeaderLogin = false"
+          >
+            <Icon name="user"/>
+            {{ Object.keys(store.user).length ? 'Профиль' : 'Войти' }}
+
+            <HeaderLogin v-show="showHeaderLogin"/>
           </div>
         </div>
       </div>
@@ -36,25 +39,25 @@
 </template>
 
 <script setup lang="ts">
-import {useCatalogStore} from "~/store/catalog.ts";
+import {Icon} from "#components";
+
+import {useCatalogStore} from "~/store/catalog";
+
 const store = useCatalogStore()
 
+const showHeaderLogin = ref(false)
 const isFocusedInput = ref(false)
 const isFocusedCatalog = ref(false)
 
-
-import {Icon} from "#components";
-
-const menu: {name: string, url: string, icon: string}[] = [
-  {name: 'Избранное', url: 'wishlist', icon: 'wishlist'},
+const menu: { name: string, url: string, icon: string }[] = [
+  {name: 'Избранное', url: 'wishlist', icon: 'favorite'},
   {name: 'Корзина', url: 'cart', icon: 'cart'},
 ]
 
 const toggleFocus = () => {
-  if (isFocusedInput.value || isFocusedCatalog.value) {
-    isFocusedInput.value = false
-    isFocusedCatalog.value = false
-  }
+  if (isFocusedInput.value) isFocusedInput.value = false;
+  if (isFocusedCatalog.value) isFocusedCatalog.value = false;
+  if (store.showLoginModal) store.showLoginModal = false;
 }
 </script>
 
@@ -67,7 +70,7 @@ const toggleFocus = () => {
   box-sizing: border-box;
   position: relative;
   font-size: 14px;
-  box-shadow: 0 2px 4px -2px base.$dark-gray;
+  box-shadow: 0 2px 4px -2px $dark-gray;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -93,6 +96,11 @@ const toggleFocus = () => {
     align-items: center;
     padding: 0 12px;
 
+    &:hover {
+      background-color: $light-gray;
+      border-radius: 12px;
+    }
+
     @media(max-width: 800px) {
       padding: 0 8px;
     }
@@ -108,7 +116,7 @@ const toggleFocus = () => {
 }
 
 .focus {
-  background-color: rgba(base.$dark-gray, 0.3);
+  background-color: rgba($dark-gray, 0.3);
   height: 100vh;
   width: 100vw;
   top: 0;

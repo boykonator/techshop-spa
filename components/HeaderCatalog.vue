@@ -19,7 +19,7 @@
         @click="toggleCatalog"
     >
       <span class="header-catalog-content-title">Каталог</span>
-      <span>V</span>
+      <Icon name="arrow-down" />
     </div>
 
 
@@ -133,7 +133,7 @@ watch(activeTabIndex, () => {
 
 <style scoped lang="scss">
 .header-catalog {
-  background: linear-gradient(0deg, base.$primary-color, base.$primary-color-light);
+  background: linear-gradient(0deg, $primary-color, $primary-color-light);
   color: white;
   width: 260px;
   height: 100%;
@@ -160,7 +160,7 @@ watch(activeTabIndex, () => {
     &-annotation {
       font-weight: normal;
       font-size: 14px;
-      background: base.$slate-gray;
+      background: $slate-gray;
       position: absolute;
       left: 0;
       bottom: -36px;
@@ -177,6 +177,8 @@ watch(activeTabIndex, () => {
     border-radius: 8px;
     box-shadow: 0 6px 8px #59100014;
     font-size: 16px;
+    display: flex;
+    align-items: center;
 
     &:hover {
       background-color: rgba(#fff, 0.3);
@@ -191,7 +193,7 @@ watch(activeTabIndex, () => {
   &-wrapper {
     display: grid;
     background: #fff;
-    color: base.$slate-gray;
+    color: $slate-gray;
     position: absolute;
     top: 64px;
     border-radius: 12px;
@@ -229,7 +231,7 @@ watch(activeTabIndex, () => {
       line-height: 20px;
 
       &:hover {
-        color: base.$secondary-color;
+        color: $secondary-color;
       }
 
       &-title {
@@ -240,20 +242,20 @@ watch(activeTabIndex, () => {
         grid-column: span 4;
 
         &:hover {
-          color: base.$secondary-color;
+          color: $secondary-color;
           transition: 0.3s ease-in-out;
         }
       }
 
       &-caption {
-        color: base.$dark-gray;
+        color: $dark-gray;
       }
     }
   }
 }
 
 .active {
-  color: base.$primary-color-light;
-  border-left: solid 2px base.$primary-color-light;
+  color: $primary-color-light;
+  border-left: solid 2px $primary-color-light;
 }
 </style>
