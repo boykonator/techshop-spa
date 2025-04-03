@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="isFocusedInput || isFocusedCatalog || store.showLoginModal" class="focus" @click.self="toggleFocus" />
+    <div v-if="isFocusedInput || isFocusedCatalog || store.showLoginModal" class="focus" @click.self="toggleFocus"/>
 
     <nav>
       <div class="header">
@@ -17,20 +17,35 @@
               class="header-link"
               @click="navigateTo(`/${item.url}`)"
           >
-
-            <Icon :name="item.icon"/>
+            <div class="header-link-icon">
+              <Icon :name="item.icon"/>
+            </div>
             {{ item.name }}
           </div>
 
           <div
+              v-if="!store.user?._id"
               class="header-link"
               @mouseenter="showHeaderLogin = true"
               @mouseleave="showHeaderLogin = false"
           >
-            <Icon name="user"/>
-            {{ Object.keys(store.user).length ? 'Профиль' : 'Войти' }}
+            <div class="header-link-icon">
+              <Icon name="user"/>
+            </div>
+            {{ 'Войти' }}
 
             <HeaderLogin v-show="showHeaderLogin"/>
+          </div>
+
+          <div
+              v-else
+              class="header-link"
+              @click="navigateTo('/profile')"
+          >
+            <div class="header-link-icon">
+              <Icon name="user"/>
+            </div>
+            {{ 'Профиль' }}
           </div>
         </div>
       </div>
@@ -41,9 +56,8 @@
 <script setup lang="ts">
 import {Icon} from "#components";
 
-import {useCatalogStore} from "~/store/catalog";
-
-const store = useCatalogStore()
+import {useUserStore} from "~/store/user";
+const store = useUserStore()
 
 const showHeaderLogin = ref(false)
 const isFocusedInput = ref(false)
@@ -111,6 +125,10 @@ const toggleFocus = () => {
       justify-content: space-between;
       position: relative;
       height: 100%;
+    }
+
+    &-icon {
+      color: $dark-gray;
     }
   }
 }

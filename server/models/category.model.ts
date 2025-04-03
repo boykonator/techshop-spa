@@ -13,6 +13,11 @@ const CategorySchema = new Schema({
     },
     image: {
         type: String,
+    },
+    parentCategory: {
+        type: Schema.Types.ObjectId,
+        ref: "Category",
+        default: null
     }
 })
 

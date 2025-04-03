@@ -17,20 +17,11 @@ const cartContent = ref([])
 </script>
 
 <style scoped lang="scss">
-a {
-  text-decoration: none;
-  color: base.$secondary-color;
-  padding: 0;
-  margin: 0;
-  border: none;
-}
-
 .cart {
-
   &-title {
     font-size: 32px;
     font-weight: bold;
-    padding: 48px 0 12px 0;
+    padding: 12px 0 12px 0;
   }
 
   &-content {
@@ -46,11 +37,10 @@ a {
     align-items: center;
     justify-content: center;
 
-
     &-image {
       height: 200px;
       width: 250px;
-      background: base.$primary-color;
+      background: $primary-color;
     }
 
     &-text {

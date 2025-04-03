@@ -1,17 +1,16 @@
 <template>
   <div class="header-login-modal-container">
-   <div class="header-login-modal-head">
-     <div class="header-login-modal-head-title">Войти</div>
-     <div class="header-login-modal-head-close" @click="store.showLoginModal = false">
-       <Icon name="cross" size="20" />
-     </div>
-   </div>
-    
-    <form class="header-login-modal-body">
+    <div class="header-login-modal-head">
+      <div class="header-login-modal-head-title">Войти</div>
+      <div class="header-login-modal-head-close" @click="userStore.showLoginModal = false">
+        <Icon name="cross" size="20" />
+      </div>
+    </div>
+
+    <form class="header-login-modal-body" @submit.prevent="requestUser">
       <div class="header-login-modal-body-input-container">
         <input
             v-model="login"
-            @blur="validateData"
             class="header-login-modal-body-input"
             :class="{ invalid: invalidMessage.length }"
             type="text"
@@ -21,7 +20,7 @@
             autocomplete="username"
             inputmode="email"
             required
-        >
+        />
 
         <div class="header-login-modal-body-input-icon"
              @mouseenter="showCaption = true"
@@ -35,12 +34,9 @@
         </div>
       </div>
 
-      <div v-if="invalidMessage.length"></div>
-
       <div v-if="loginState === 'password'" class="header-login-modal-body-input-container">
         <input
             v-model="password"
-            @blur="validateData"
             class="header-login-modal-body-input"
             :class="{ invalid : invalidMessage.length }"
             :type="passwordState ? 'password' : 'text'"
@@ -49,67 +45,102 @@
             name="password"
             autocomplete="current-password"
             required
-
-        >
+        />
         <div class="header-login-modal-body-input-icon" @click="showPassword">
           <Icon v-if="passwordState" name="eye-off" size="20"/>
           <Icon v-else name="eye-show" size="20"/>
         </div>
       </div>
 
-      <div v-if="invalidMessage && invalidMessage.length" class="header-login-modal-body-invalid-message"> {{ invalidMessage}} </div>
+      <div v-if="invalidMessage.length" class="header-login-modal-body-invalid-message">
+        {{ invalidMessage }}
+      </div>
 
-      <button class="header-login-modal-body-button-active" type="submit" @submit.prevent="validateData">{{ loginState === 'code' ? 'Получить код' : 'Войти' }}</button>
-      <button class="header-login-modal-body-button" v-if="loginState === 'code'" @click="setModalState('password')">Войти с паролем</button>
-      <button class="header-login-modal-body-button" v-if="loginState === 'password'" @click="setModalState('code')">Войти с кодом</button>
+      <button class="header-login-modal-body-button-active" type="submit">
+        {{ loginState === 'code' ? 'Получить код' : 'Войти' }}
+      </button>
 
-      <div class="header-login-modal-body-caption">Нажимая кнопку «{{ loginState === 'code' ? 'Получить код' : 'Войти' }}», вы соглашаетесь c условиями <a href="">политики конфиденциальности</a>.</div>
+      <button class="header-login-modal-body-button" type="button" v-if="loginState === 'code'" @click="setModalState('password')">
+        Войти с паролем
+      </button>
     </form>
+
+    <button class="header-login-modal-body-button" type="button" v-if="loginState === 'password'" @click="setModalState('code')">
+      Войти с кодом
+    </button>
+
+    <div class="header-login-modal-body-caption">
+      Нажимая кнопку «{{ loginState === 'code' ? 'Получить код' : 'Войти' }}», вы соглашаетесь c условиями
+      <a href="">политики конфиденциальности</a>.
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import {useCatalogStore} from "~/store/catalog";
-const store = useCatalogStore()
+import axios from "axios"
+import { useUserStore } from '~/store/user'
+const userStore = useUserStore()
 
-const loginState = ref('code')
+const loginState = ref("code")
 const showCaption = ref(false)
 const passwordState = ref(true)
+const login = ref("")
+const password = ref("")
+const invalidMessage = ref("")
 
-const login = ref('')
-const password = ref('')
+const regex = /^(7\s\d{3}\s\d{3}\s\d{2}\s\d{2}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$/
 
-const regex = /^(7\s\d{3}\s\d{3}\s\d{2}\s\d{2}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$/;
+const requestUser = async () => {
+  validateData()
 
-const invalidMessage = ref('')
+  if (!invalidMessage.value.length) {
+    try {
+      const { data } = await axios.post("/api/users/login", {
+        email: login.value, password: password.value,
+      })
+
+      console.log('data: ',data)
+
+      if (data.status && data.status !== 200) {
+        invalidMessage.value = 'Неверный пароль'
+
+        setTimeout(() => {
+          invalidMessage.value = ''
+        }, 5000)
+      } else {
+        userStore.user = data.user
+        console.log(userStore.user)
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error)
+    }
+  }
+}
 
 const validateData = () => {
-  if (!login.value.length && loginState.value === 'code') {
-    invalidMessage.value = 'Заполните поле'
-    return
+  if (login.value.length || password.value.length) {
+    if (!login.value.length && loginState.value === "code") {
+      invalidMessage.value = "Заполните поле"
+      return
+    }
+
+    if ((!login.value.length || !password.value.length) && loginState.value === "password") {
+      invalidMessage.value = "Не все поля заполнены"
+      return
+    }
+
+    if (!regex.test(login.value)) {
+      invalidMessage.value = "Введите корректный логин (e-mail или телефон)"
+      return
+    }
+
+    if (loginState.value === "password" && password.value.length < 6) {
+      invalidMessage.value = "Длина пароля должна быть не менее 6 символов"
+      return
+    }
   }
 
-  if ((!login.value.length || !password.value.length) && loginState.value === 'password') {
-    invalidMessage.value = 'Не все поля заполнены'
-    return
-  }
-
-  if (!regex.test(login.value)) {
-    invalidMessage.value = 'Введите корректный логин (e-mail или телефон)'
-    return
-  }
-
-  if (password.value.length < 6) {
-    invalidMessage.value = 'Длина пароля должна быть не менее 6 символов'
-    return
-  }
-
-  // if (!Object.keys(store.user).length) {
-  //   invalidMessage.value = 'Логин или пароль указаны неверно'
-  //   return
-  // }
-
-  invalidMessage.value = ''
+  invalidMessage.value = ""
 }
 
 const showPassword = () => {
@@ -120,13 +151,17 @@ const setModalState = (state: string) => {
   loginState.value = state
 }
 
+watch(() => userStore.user, () => {
+  userStore.showLoginModal = false
+})
+
 watch(loginState, () => {
   showCaption.value = false
   passwordState.value = true
 })
 
-watch(() => store.showLoginModal, () => {
-  loginState.value = 'code'
+watch(() => userStore.showLoginModal, () => {
+  loginState.value = "code"
   showCaption.value = false
   passwordState.value = true
 })

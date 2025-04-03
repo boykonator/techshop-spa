@@ -11,6 +11,7 @@
         class="header-input"
         @focus="toggleInput(true)"
         @blur="toggleInput(false)"
+        tabindex="-1"
     >
     <div class="header-input-icons">
       <span class="header-input-icon"

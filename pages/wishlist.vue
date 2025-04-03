@@ -29,13 +29,13 @@
 </template>
 
 <script setup>
-import {useCatalogStore} from "~/store/catalog.ts";
-const store = useCatalogStore()
+import { useUserStore } from '~/store/user'
+const store = useUserStore();
 
 const showWarning = ref(false)
 
 const isWarningShown = () => {
-  showWarning.value = !!(!Object.keys(store.user).length && wishlistContent.value.length)
+  showWarning.value = !!(!store.user && wishlistContent.value.length)
 }
 
 const wishlistContent = ref([{}])
@@ -65,7 +65,7 @@ onMounted(() => {
   &-title {
     font-size: 32px;
     font-weight: bold;
-    padding: 48px 0 12px 0;
+    padding: 12px 0;
   }
 
   &-content {
@@ -95,7 +95,7 @@ onMounted(() => {
   &-warning {
     background-color: rgba($primary-color-light, 0.3);
     border-radius: 8px;
-    padding: 20px;
+    padding: 20px 36px 20px 20px;
     display: flex;
     align-items: center;
     margin-bottom: 16px;

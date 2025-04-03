@@ -28,18 +28,18 @@ a {
 }
 
 .container {
-  padding: 48px 144px;
+  padding: 24px 144px;
   background-color: $light-gray;
   min-height: 70vh;
   display: flex;
   flex-direction: column;
 
   @media(max-width: 1440px) {
-    padding: 48px 72px;
+    padding: 24px 72px;
   }
 
   @media(max-width: 1280px) {
-    padding: 48px 36px;
+    padding: 24px 36px;
   }
 }
 
