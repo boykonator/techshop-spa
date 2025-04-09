@@ -2,7 +2,7 @@
   <div class="wishlist">
     <div class="wishlist-title">Избранное</div>
 
-    <div v-if="showWarning" class="wishlist-warning">
+    <div v-if="showWarning" class="wishlist-warning" >
       <span class="wishlist-warning-icon">
         <Icon name="exclamation-mark" />
       </span>
@@ -29,7 +29,7 @@
 </template>
 
 <script setup>
-import { useUserStore } from '~/store/user'
+import { useUserStore } from '~/stores/user'
 const store = useUserStore();
 
 const showWarning = ref(false)
@@ -58,6 +58,10 @@ const getDateInAWeek = () => {
 onMounted(() => {
   isWarningShown()
 })
+
+watch(() => store.user, () => {
+  isWarningShown()
+}, )
 </script>
 
 <style scoped lang="scss">

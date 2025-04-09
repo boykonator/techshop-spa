@@ -4,7 +4,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ['@pinia/nuxt', 'nuxt-mongoose'],
   imports: {
-    dirs: ["store"],
+    dirs: ["stores"],
     autoImport: true,
   },
   css: ['assets/scss/main.scss'],

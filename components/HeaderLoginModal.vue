@@ -78,7 +78,7 @@
 
 <script setup lang="ts">
 import axios from "axios"
-import { useUserStore } from '~/store/user'
+import { useUserStore } from '~/stores/user'
 const userStore = useUserStore()
 
 const loginState = ref("code")
@@ -87,6 +87,8 @@ const passwordState = ref(true)
 const login = ref("")
 const password = ref("")
 const invalidMessage = ref("")
+
+const userData = ref(userStore.user)
 
 const regex = /^(7\s\d{3}\s\d{3}\s\d{2}\s\d{2}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$/
 
@@ -108,8 +110,8 @@ const requestUser = async () => {
           invalidMessage.value = ''
         }, 5000)
       } else {
-        userStore.user = data.user
-        console.log(userStore.user)
+        userData.value = data.user
+        console.log(userData.value)
       }
     } catch (error) {
       console.error("Error fetching user data:", error)

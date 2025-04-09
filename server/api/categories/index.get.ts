@@ -1,11 +1,8 @@
 export default defineEventHandler(async () => {
-    const mainCategories = await Category.find({ parentCategory: null });
-    console.log(mainCategories);
-
-    const subcategories = await Category.find({ parentCategory: household._id });
-    console.log(subcategories);
-
-    const categories = await Category.find()
-
-    return categories
+    try {
+        const categories = await Category.find({ parentCategory: { $ne: null } })
+        return { success: true, data: categories }
+    } catch (error) {
+        return { success: false, error: error.message || 'Unknown error' }
+    }
 })

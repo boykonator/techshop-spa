@@ -15,8 +15,8 @@
 </template>
 
 <script setup>
-import {useCatalogStore} from "~/store/catalog.ts";
-const store = useCatalogStore()
+import {useUserStore} from "~/stores/user.ts";
+const store = useUserStore()
 
 const menu = [
   {title: 'Узнать статус заказа', url: 'order/check-order-status'},

@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import { useUserStore } from '~/store/user'
+import { useUserStore } from '~/stores/user'
 const userStore = useUserStore();
 
 const profile = computed(() => [

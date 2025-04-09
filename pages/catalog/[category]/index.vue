@@ -12,7 +12,7 @@
 import { useRoute } from 'vue-router';
 const route = useRoute();
 
-import {useCatalogStore} from "~/store/catalog.ts";
+import {useCatalogStore} from "~/stores/catalog.ts";
 const store = useCatalogStore()
 
 const title = () => {

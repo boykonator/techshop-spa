@@ -56,7 +56,7 @@
 <script setup lang="ts">
 import {Icon} from "#components";
 
-import {useUserStore} from "~/store/user";
+import {useUserStore} from "~/stores/user";
 const store = useUserStore()
 
 const showHeaderLogin = ref(false)

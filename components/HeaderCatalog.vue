@@ -2,7 +2,7 @@
   <div class="header-catalog">
     <div
         class="header-catalog-logo"
-        @click="navigateTo('/')"
+        @click="() => { navigateTo('/'); toggleCatalog(false) }"
         @mouseenter="isLinkHovered = true"
         @mouseleave="isLinkHovered = false"
     >
@@ -12,42 +12,50 @@
       </div>
     </div>
 
-    <div class="header-catalog-content" @click="toggleCatalog">
-      <span class="header-catalog-content-title">Каталог</span>
-      <Icon name="arrow-down" />
+    <div class="header-catalog-content" @click="toggleCatalog(!isCatalogOpened)">
+      <span>Каталог</span>
+      <Icon name="arrow-down"/>
     </div>
 
     <div v-if="isCatalogOpened" class="header-catalog-wrapper">
       <div class="header-catalog-menu">
-        <div class="header-catalog-menu-link"
-             @mouseenter="activeTabIndex = index"
-             :class="{ active: activeTabIndex === index }"
-             @click="setActiveTab(item.url)"
-             v-for="(item, index) of store.catalog"
-             :key="item.title"
+        <div
+            v-for="(item, index) in catalog"
+            :key="item.title"
+            class="header-catalog-menu-link"
+            @mouseenter="activeTabIndex = index"
+            :class="{ active: activeTabIndex === index }"
+            @click="navigateTo(`/catalog/${item.url}`)"
         >
-          <span>{{ item.title }}</span>
+          {{ item.title }}
         </div>
       </div>
 
       <div v-if="activeCategory" class="header-catalog-submenu-wrapper">
-        <div class="header-catalog-submenu"
-             v-for="(category, index) of activeCategory"
-             :key="index"
+        <div
+            v-for="(category, index) in activeCategory.categories"
+            :key="index"
+            class="header-catalog-submenu"
         >
-          <div class="header-catalog-submenu-link-title" @click="navigateTo(category.url)">
+          <div class="header-catalog-submenu-link-title" @click="navigateTo(`/catalog/${category.url}`)">
             {{ category.title }}
           </div>
 
           <div
-              v-for="item of category.subcategories"
-              @click="navigateTo(item.url)"
+              v-for="item in category.subcategories"
+              :key="item.url"
+              @click="navigateTo(`/catalog/${item.url}`)"
               class="header-catalog-submenu-link"
           >
-            {{ item.title }}
-            <span class="header-catalog-submenu-link-caption">
-              {{ Math.trunc((Math.random() * 100) + 1) }}
-              <Icon name="arrow-right" size="16" style="transform: rotate(-90deg)" />
+            <span class="header-catalog-submenu-link-text">
+              <span v-html="splitTitle(item.title)[0]"></span>
+              <span class="header-catalog-submenu-link-caption-group">
+                {{ splitTitle(item.title)[1] }}
+                <span class="header-catalog-submenu-link-caption">
+                  {{ Math.trunc(Math.random() * 100 + 1) }}
+                  <Icon name="arrow-right" size="16" class="caption-icon"/>
+                </span>
+              </span>
             </span>
           </div>
         </div>
@@ -56,46 +64,55 @@
   </div>
 </template>
 
-<script setup>
-import { useRoute } from 'vue-router'
-const route = useRoute()
+<script setup lang="ts">
+import {useRoute} from 'vue-router'
+import {useCatalogStore} from '~/stores/catalog'
 
-import { useCatalogStore } from "~/store/catalog.ts"
+const route = useRoute()
 const store = useCatalogStore()
 
+const catalog = ref(store.catalog)
 const isLinkHovered = ref(false)
 const activeTabIndex = ref(0)
 const activeTab = ref(store.activeTab)
 
-const props = defineProps({
-  isFocused: Boolean,
-})
+const props = defineProps({isFocused: Boolean})
+const emit = defineEmits(['update:isFocused'])
 
 const isCatalogOpened = ref(props.isFocused)
-const emit = defineEmits(["update:isFocused"])
 
-const toggleCatalog = () => {
-  isCatalogOpened.value = !isCatalogOpened.value
-  emit("update:isFocused", isCatalogOpened.value)
+const splitTitle = (title: string) => {
+  const words = title.trim().split(' ')
+  const lastWord = words.pop()
+  const rest = words.join(' ')
+  return [rest ? rest + ' ' : '', lastWord]
 }
+
+const toggleCatalog = (value) => {
+  isCatalogOpened.value = value
+  emit('update:isFocused', value)
+}
+
+const setActiveTab = (tabUrl: string) => {
+  store.activeTab = tabUrl
+  activeTab.value = tabUrl
+}
+
+const activeCategory = computed(() =>
+    store.categoryTree.find(category => category.url === activeTab.value)
+)
+
+watch(() => store.catalog, () => {
+  catalog.value = store.catalog
+})
 
 watch(() => props.isFocused, () => {
   isCatalogOpened.value = props.isFocused
 })
 
 watch(activeTabIndex, () => {
-  if (store.catalog[activeTabIndex.value]) {
-    setActiveTab(store.catalog[activeTabIndex.value].url)
-  }
-})
-
-const setActiveTab = (tabUrl) => {
-  store.activeTab = tabUrl
-  activeTab.value = tabUrl
-}
-
-const activeCategory = computed(() => {
-  return store.categories[activeTab.value]
+  const tab = store.catalog[activeTabIndex.value]
+  if (tab) setActiveTab(tab.url)
 })
 </script>
 
@@ -125,7 +142,6 @@ const activeCategory = computed(() => {
     }
 
     &-annotation {
-      font-weight: normal;
       font-size: 14px;
       background: $slate-gray;
       position: absolute;
@@ -137,7 +153,7 @@ const activeCategory = computed(() => {
   }
 
   &-content {
-    padding: 10px 16px 10px 20px;
+    padding: 10px 16px;
     margin-right: 12px;
     font-weight: bold;
     background-color: rgba(#fff, 0.1);
@@ -146,16 +162,11 @@ const activeCategory = computed(() => {
     font-size: 16px;
     display: flex;
     align-items: center;
-
     cursor: pointer;
 
     &:hover {
       background-color: rgba(#fff, 0.3);
       box-shadow: 0 6px 8px #2d2074;
-    }
-
-    &-title {
-      margin-right: 8px;
     }
   }
 
@@ -181,50 +192,61 @@ const activeCategory = computed(() => {
     }
   }
 
-  &-submenu {
-    position: relative;
-    background: #ffffff;
-    border-radius: 12px;
+  &-submenu-wrapper {
+    padding: 24px;
+  }
 
-    &-wrapper {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      grid-gap: 24px;
-      padding: 24px;
+  &-submenu {
+    display: grid;
+    grid-template-columns: repeat(3, 290px);
+    column-gap: 24px;
+    margin-bottom: 16px;
+
+    &-link-title {
+      font-weight: bold;
+      margin-bottom: 12px;
+      padding-top: 8px;
+      grid-column: span 3;
+      cursor: pointer;
+      white-space: nowrap;
+
+      &:hover {
+        color: $secondary-color;
+      }
     }
 
     &-link {
       font-size: 14px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
       line-height: 20px;
-      display: flex;
+      margin-bottom: 8px;
       cursor: pointer;
 
       &:hover {
         color: $secondary-color;
       }
 
-      &-title {
-        font-weight: bold;
-        margin-bottom: 12px;
-        padding-top: 8px;
-        transition: 0.3s ease-in-out;
-        grid-column: span 4;
-        cursor: pointer;
+      &-text {
+        display: inline;
+        white-space: normal;
+        word-break: break-word;
+      }
 
-        &:hover {
-          color: $secondary-color;
-          transition: 0.3s ease-in-out;
-        }
+      &-caption-group {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
       }
 
       &-caption {
-        margin-left: 4px;
-        color: $dark-gray;
-        display: flex;
+        display: inline-flex;
         align-items: center;
+        gap: 4px;
+        color: $dark-gray;
+      }
+
+      .caption-icon {
+        transform: rotate(-90deg);
       }
     }
   }

@@ -1,7 +1,7 @@
 import {defineStore} from 'pinia';
 import persistedState from "pinia-plugin-persistedstate";
 
-export const useUserStore = defineStore('counter', () => {
+export const useUserStore = defineStore('user', () => {
     const user = ref<{} | null>(null)
 
     const setUser = (userData: {}) => {

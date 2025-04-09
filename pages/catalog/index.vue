@@ -17,7 +17,7 @@
 </template>
 
 <script setup>
-import {useCatalogStore} from "~/store/catalog.ts";
+import {useCatalogStore} from "~/stores/catalog.ts";
 const store = useCatalogStore()
 
 </script>
@@ -75,14 +75,14 @@ const store = useCatalogStore()
 
       &:hover {
         background-color: #fff;
-        border-color: base.$light-gray;
-        box-shadow: 0 10px 20px 1px base.$mid-gray;
+        border-color: $light-gray;
+        box-shadow: 0 10px 20px 1px $mid-gray;
       }
 
       &-image {
         height: 120px;
         width: 180px;
-        background: base.$primary-color;
+        background: $primary-color;
       }
 
       &-text {

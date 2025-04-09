@@ -5,6 +5,21 @@
   </div>
 </template>
 
+<script setup>
+import { useCatalogStore } from "~/stores/catalog"
+const store = useCatalogStore()
+
+import { useUserStore } from '~/stores/user'
+const userStore = useUserStore()
+
+// console.log('userStore: ', userStore)
+// console.log('store: ', store)
+
+onMounted(() => {
+  store.fetchCatalog()
+})
+</script>
+
 <style lang="scss">
 a {
   text-decoration: none;
@@ -61,6 +76,11 @@ button {
   &:hover:active {
     box-shadow: 0 0 0 2px rgba($primary-color-light, 0.3);
     background: linear-gradient(0deg, $primary-color, $primary-color-light);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
   }
 }
 </style>
