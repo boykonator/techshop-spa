@@ -1,20 +1,22 @@
-export interface Subcategory {
+export interface ISubcategory {
     _id: string
     title: string
     url: string
+    parentCategory: string
 }
 
-export interface Category {
+export interface ICategory {
     _id: string
     title: string
     url: string
     parentCategory?: string
-    subcategories?: Subcategory[]
+    subcategories?: ISubcategory[]
 }
 
-export interface CatalogItem {
+export interface ICatalogItem {
     _id: string
     title: string
     url: string
-    categories?: Category[]
+    parentCategory: null
+    categories?: ICategory[]
 }

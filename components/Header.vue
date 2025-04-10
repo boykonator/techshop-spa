@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="isFocusedInput || isFocusedCatalog || store.showLoginModal" class="focus" @click.self="toggleFocus"/>
+    <div v-if="isFocusedInput || isFocusedCatalog || state.showLoginModal || state.showDeleteModal" class="focus" @click.self="toggleFocus"/>
 
     <nav>
       <div class="header">
@@ -8,7 +8,7 @@
 
         <HeaderCatalog v-model:isFocused="isFocusedCatalog" :style="{ zIndex: isFocusedCatalog ? 9 : 1 }"/>
         <HeaderInput v-model:isFocused="isFocusedInput" :style="{ zIndex: isFocusedInput ? 9 : 1 }"/>
-        <HeaderLoginModal v-show="store.showLoginModal"/>
+        <HeaderLoginModal v-show="state.showLoginModal"/>
 
         <div class="header-link-container">
           <div
@@ -32,7 +32,7 @@
             <div class="header-link-icon">
               <Icon name="user"/>
             </div>
-            {{ 'Войти' }}
+            Войти {{ store.user }}
 
             <HeaderLogin v-show="showHeaderLogin"/>
           </div>
@@ -45,7 +45,7 @@
             <div class="header-link-icon">
               <Icon name="user"/>
             </div>
-            {{ 'Профиль' }}
+            Профиль
           </div>
         </div>
       </div>
@@ -54,10 +54,11 @@
 </template>
 
 <script setup lang="ts">
-import {Icon} from "#components";
-
 import {useUserStore} from "~/stores/user";
 const store = useUserStore()
+
+import {useStateStore} from "~/stores/state";
+const state = useStateStore()
 
 const showHeaderLogin = ref(false)
 const isFocusedInput = ref(false)
@@ -71,7 +72,8 @@ const menu: { name: string, url: string, icon: string }[] = [
 const toggleFocus = () => {
   if (isFocusedInput.value) isFocusedInput.value = false;
   if (isFocusedCatalog.value) isFocusedCatalog.value = false;
-  if (store.showLoginModal) store.showLoginModal = false;
+  if (state.showLoginModal) state.showLoginModal = false;
+  if (state.showDeleteModal) state.showDeleteModal = false;
 }
 </script>
 

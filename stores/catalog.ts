@@ -1,11 +1,11 @@
 import {defineStore} from 'pinia';
 import axios from "axios";
-import type {CatalogItem, Category} from "~/types/catalog"
+import type {ICatalogItem, ICategory} from "~/types/catalog"
 
 export const useCatalogStore = defineStore('catalog', () => {
-    const catalog = ref<CatalogItem[]>([])
-    const categories = ref<Category[]>([])
-    const categoryTree = ref<CatalogItem[]>([])
+    const catalog = ref<ICatalogItem[]>([])
+    const categories = ref<ICategory[]>([])
+    const categoryTree = ref<ICatalogItem[]>([])
 
     const activeTab = ref('bytovaya-tehnika')
 
@@ -37,6 +37,7 @@ export const useCatalogStore = defineStore('catalog', () => {
                 _id: catalogItem._id,
                 title: catalogItem.title,
                 url: catalogItem.url,
+                parentCategory: catalogItem.parentCategory,
                 categories: []
             };
             catalogMap.set(catalogItem._id, entry);
@@ -48,6 +49,7 @@ export const useCatalogStore = defineStore('catalog', () => {
                 _id: category._id,
                 title: category.title,
                 url: category.url,
+                parentCategory: category.parentCategory,
                 subcategories: []
             };
             categoryMap.set(category._id, entry);

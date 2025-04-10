@@ -14,9 +14,9 @@
   </div>
 </template>
 
-<script setup>
-import {useUserStore} from "~/stores/user.ts";
-const store = useUserStore()
+<script setup lang="ts">
+import {useStateStore} from "~/stores/state";
+const state = useStateStore()
 
 const menu = [
   {title: 'Узнать статус заказа', url: 'order/check-order-status'},
@@ -25,7 +25,7 @@ const menu = [
 ]
 
 const toggleLoginModal = () => {
-  store.showLoginModal = !store.showLoginModal
+  state.showLoginModal = !state.showLoginModal
 }
 </script>
 

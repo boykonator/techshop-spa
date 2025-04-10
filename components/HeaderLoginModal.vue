@@ -2,7 +2,7 @@
   <div class="header-login-modal-container">
     <div class="header-login-modal-head">
       <div class="header-login-modal-head-title">Войти</div>
-      <div class="header-login-modal-head-close" @click="userStore.showLoginModal = false">
+      <div class="header-login-modal-head-close" @click="state.showLoginModal = false">
         <Icon name="cross" size="20" />
       </div>
     </div>
@@ -81,6 +81,9 @@ import axios from "axios"
 import { useUserStore } from '~/stores/user'
 const userStore = useUserStore()
 
+import { useStateStore } from '~/stores/state'
+const state = useStateStore()
+
 const loginState = ref("code")
 const showCaption = ref(false)
 const passwordState = ref(true)
@@ -111,6 +114,7 @@ const requestUser = async () => {
         }, 5000)
       } else {
         userData.value = data.user
+        userStore.user = data.user
         console.log(userData.value)
       }
     } catch (error) {
@@ -154,7 +158,7 @@ const setModalState = (state: string) => {
 }
 
 watch(() => userStore.user, () => {
-  userStore.showLoginModal = false
+  state.showLoginModal = false
 })
 
 watch(loginState, () => {
@@ -162,7 +166,7 @@ watch(loginState, () => {
   passwordState.value = true
 })
 
-watch(() => userStore.showLoginModal, () => {
+watch(() => state.showLoginModal, () => {
   loginState.value = "code"
   showCaption.value = false
   passwordState.value = true

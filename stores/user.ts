@@ -6,22 +6,19 @@ export const useUserStore = defineStore('user', () => {
 
     const setUser = (userData: {}) => {
         user.value = userData;
-    };
+    }
 
     const logout = () => {
         user.value = null;
-    };
+    }
 
     const isAuthenticated = computed(() => !!user.value);
-
-    const showLoginModal = ref(false)
 
     return {
         user,
         isAuthenticated,
         setUser,
-        logout,
-        showLoginModal
+        logout
     }
     }, {
     persist: true

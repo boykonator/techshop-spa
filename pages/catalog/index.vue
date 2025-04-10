@@ -7,9 +7,7 @@
            :key="item.title"
            @click="navigateTo(`/catalog/${item.url}`)"
       >
-        <div class="catalog-content-card-image">
-
-        </div>
+        <div class="catalog-content-card-image"></div>
         <div class="catalog-content-card-text"> {{ item.title }} </div>
       </div>
     </div>
@@ -90,7 +88,6 @@ const store = useCatalogStore()
         line-height: 26px;
         font-weight: bold;
         word-wrap: break-word;
-
       }
     }
   }

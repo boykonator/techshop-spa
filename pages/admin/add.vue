@@ -8,21 +8,23 @@
        <button @click="toggleModal">Add Category</button>
 
        <div v-if="showAddCategoryModal" class="add-category-modal">
-         <div><strong>Add Category</strong></div>
-         <input type="text" placeholder="Title" v-model="newCategoryTitle" />
-         <select name="" id="" v-model="newCategoryParent">
-           <option :value="null">
-             null
-           </option>
-           <option v-for="category in store.catalog" :value="category._id">
-             {{ category.title }}
-           </option>
-         </select>
+         <div>
+           <div><strong>Add Category</strong></div>
+           <input type="text" placeholder="Title" v-model="newCategoryTitle" />
+           <select name="" id="" v-model="newCategoryParent">
+             <option :value="null">
+               null (Parent Category)
+             </option>
+             <option v-for="category in store.catalog" :value="category._id">
+               {{ category.title }}
+             </option>
+           </select>
 
-         <button @click="createCategory(newCategoryTitle, newCategoryParent)" :disabled="!newCategoryTitle.length">Create category</button>
-         <div class="add-category-modal-close" @click="showAddCategoryModal = false">
-           <Icon name="cross" />
+           <button @click="createCategory(newCategoryTitle, newCategoryParent)" :disabled="!newCategoryTitle.length">Create category</button>
+
+           <Icon name="cross" class="add-category-modal-close" @click="showAddCategoryModal = false" />
          </div>
+         <div v-if="categoryCreated" class="success">Category created successfully!</div>
        </div>
      </div>
 
@@ -30,18 +32,34 @@
        <button @click="toggleModalSubcategory">Add Subcategory</button>
 
        <div v-if="showAddSubcategoryModal" class="add-category-modal">
-         <div><strong>Add Subcategory</strong></div>
-         <input type="text" placeholder="Title" v-model="newSubcategoryTitle" />
-         <select name="" id="" v-model="newSubcategoryParent">
-           <option v-for="category in categories" :value="category._id">
-             {{ category.title }}
-           </option>
-         </select>
+         <div>
+           <div><strong>Add Subcategory</strong></div>
+           <input type="text" placeholder="Title" v-model="newSubcategoryTitle" />
 
-         <button @click="createCategory(newSubcategoryTitle, newSubcategoryParent)" :disabled="!newSubcategoryTitle.length">Create category</button>
-         <div class="add-category-modal-close" @click="showAddSubcategoryModal = false">
-           <Icon name="cross" />
+           <select v-model="newSubcategoryParent">
+             <option value="" disabled>Choose category</option>
+             <optgroup
+                 v-for="parent in groupedCategories"
+                 :key="parent.title"
+                 :label="parent.title"
+             >
+               <option
+                   v-for="child in parent.children"
+                   :key="child._id"
+                   :value="child._id"
+               >
+                 {{ child.title }}
+               </option>
+             </optgroup>
+           </select>
+           <button
+               @click="createCategory(newSubcategoryTitle, newSubcategoryParent)"
+               :disabled="!newSubcategoryTitle || !newSubcategoryParent"
+           >Create category</button>
+           <Icon name="cross" class="add-category-modal-close" @click="showAddSubcategoryModal = false" />
          </div>
+
+         <div v-if="categoryCreated" class="success">Subcategory created successfully!</div>
        </div>
      </div>
    </div>
@@ -57,32 +75,49 @@ const store = useCatalogStore()
 
 const storeData = ref(store.categoryTree)
 
-const categories = ref([])
-
-const getCategories = () => {
-  categories.value = []
-  storeData.value.forEach((category) => {
-    if (category.categories.length) {
-      category.categories.forEach((subcategory) => {
-        // Log the subcategory details instead of just the title
-        console.log(subcategory)
-        categories.value.push(subcategory) // Push the entire subcategory object
-      })
-    }
-  })
-
-  console.log('categories', categories.value) // This will now include the full subcategory objects
-}
-
-
-
 const newCategoryTitle = ref('')
 const newCategoryParent = ref(null)
 const showAddCategoryModal = ref(false)
 
 const newSubcategoryTitle = ref('')
-const newSubcategoryParent = ref(null)
+const newSubcategoryParent = ref('')
 const showAddSubcategoryModal = ref(false)
+
+const categories = ref([])
+const categoryCreated = ref(false)
+
+
+const getCategories = () => {
+  categories.value = []
+
+  storeData.value.forEach((category) => {
+    if (category.categories.length) {
+      category.categories.forEach((subcategory) => {
+        categories.value.push(subcategory)
+      })
+    }
+  })
+}
+
+const groupedCategories = computed(() => {
+  const groupMap = new Map()
+
+  store.categories.forEach((category) => {
+    if (!category.parentCategory) return
+
+    const parent = store.catalog.find(c => c._id === category.parentCategory)
+
+    if (!parent) return
+
+    if (!groupMap.has(parent.title)) {
+      groupMap.set(parent.title, { title: parent.title, children: [] })
+    }
+
+    groupMap.get(parent.title).children.push(category)
+  })
+
+  return Array.from(groupMap.values())
+})
 
 const toggleModal = () => {
   showAddSubcategoryModal.value = false
@@ -94,6 +129,8 @@ const toggleModalSubcategory = () => {
   showAddSubcategoryModal.value = !showAddSubcategoryModal.value
 }
 
+let timeout = null
+
 const createCategory = async (title, parentCategory) => {
   try {
     const category = createCatalogLinks(title)
@@ -104,13 +141,27 @@ const createCategory = async (title, parentCategory) => {
       url: category.url,
     })
 
-    console.log(data)
+    if (data) {
+      categoryCreated.value = true
+
+      if (timeout) {
+        clearTimeout(timeout)
+      }
+
+      timeout = setTimeout(() => {
+        categoryCreated.value = false
+      }, 3000)
+    }
 
     await store.fetchCatalog()
   } catch (error) {
     console.error(error)
   }
 }
+
+onMounted(() => {
+  getCategories()
+})
 
 watch(() => store.categoryTree, (newValue) => {
   storeData.value = newValue
@@ -119,10 +170,6 @@ watch(() => store.categoryTree, (newValue) => {
 </script>
 
 <style scoped lang="scss">
-.error {
-  color: red
-}
-
 .add-category-modal {
   position: absolute;
   background-color: white;
@@ -135,5 +182,13 @@ watch(() => store.categoryTree, (newValue) => {
     right: 10px;
     top: 8px;
   }
+}
+
+.error {
+  color: $invalid
+}
+
+.success {
+  color: $success
 }
 </style>

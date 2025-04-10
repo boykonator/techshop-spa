@@ -9,7 +9,9 @@ const transliterate = (text) => {
         'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch', 'ь': '', 'ы': 'y', 'ъ': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
         ' ': '-', ',': '',
     }
+
     return text
+        .trim()
         .split('')
         .map(char => translitMap.hasOwnProperty(char) ? translitMap[char] : char)
         .filter(char => char !== undefined && char !== '')
@@ -18,8 +20,10 @@ const transliterate = (text) => {
 
 export const createCatalogLinks = (title) => {
     const link = transliterate(title).toLowerCase()
+    const trimmedTitle = title.trim()
+
     return {
-        title: title.charAt(0).toUpperCase() + title.slice(1),
+        title: trimmedTitle.charAt(0).toUpperCase() + trimmedTitle.slice(1),
         url: link,
     }
 }
