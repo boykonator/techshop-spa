@@ -1,6 +1,8 @@
 <template>
   <div>
+    helo product =)
 
+    i'm id page of {{ route.path }}
   </div>
 </template>
 
@@ -8,7 +10,6 @@
 import { useRoute } from 'vue-router';
 const route = useRoute();
 
-onMounted(() => {
-  navigateTo(`/catalog/${route.params.category}`);
-})
+import { useCatalogStore } from "~/stores/catalog"
+const store = useCatalogStore()
 </script>

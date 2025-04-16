@@ -75,11 +75,48 @@ export const useCatalogStore = defineStore('catalog', () => {
         console.log('Final structure:', categoryTree.value);
     }
 
+    const breadcrumbs = ref({})
+
+    const createBreadcrumbs = (url) => {
+        const catalog = { title: 'Каталог', url: '' }
+
+        for (const parent of categoryTree.value) {
+            if (parent.url === url) {
+                breadcrumbs.value = { catalog, parent }
+                return
+            }
+
+            for (const category of parent.categories || []) {
+                if (category.url === url) {
+                    breadcrumbs.value = { catalog, parent, category }
+                    return
+                }
+
+                for (const subcategory of category.subcategories || []) {
+                    if (subcategory.url === url) {
+                        breadcrumbs.value = { catalog, parent, category, subcategory }
+                        return
+                    }
+                }
+            }
+        }
+    }
+
+    const breadcrumbArray = computed(() => [
+        breadcrumbs.value.catalog,
+        breadcrumbs.value.parent,
+        breadcrumbs.value.category,
+        breadcrumbs.value.subcategory,
+    ].filter(Boolean))
+
     return {
         catalog,
         categories,
         categoryTree,
         activeTab,
+        breadcrumbs,
+        breadcrumbArray,
         fetchCatalog,
+        createBreadcrumbs
     }
 })

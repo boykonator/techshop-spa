@@ -6,7 +6,7 @@
         @mouseenter="isLinkHovered = true"
         @mouseleave="isLinkHovered = false"
     >
-      LOGO
+      IBTech
       <div v-if="isLinkHovered && route.path !== '/'" class="header-catalog-logo-annotation">
         Вернуться на главную
       </div>
@@ -20,7 +20,7 @@
     <div v-if="isCatalogOpened" class="header-catalog-wrapper">
       <div class="header-catalog-menu">
         <div
-            v-for="(item, index) in catalog"
+            v-for="item in catalog"
             :key="item.title"
             class="header-catalog-menu-link"
             @mouseenter="activeTabIndex = index"

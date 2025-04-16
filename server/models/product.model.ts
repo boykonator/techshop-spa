@@ -1,9 +1,10 @@
 import {Schema, model} from "mongoose"
 
 const ProductSchema = new Schema({
-    name: {
+    title: {
         type: String,
         required: true,
+        unique: true,
     },
     description: {
         type: String,
@@ -15,6 +16,10 @@ const ProductSchema = new Schema({
     category: {
         type: Schema.Types.ObjectId,
         ref: "Category",
+        required: true
+    },
+    url: {
+        type: String,
         required: true
     },
     stock: {

@@ -19,12 +19,31 @@ const transliterate = (text) => {
 }
 
 export const createCatalogLinks = (title) => {
-    const link = transliterate(title).toLowerCase()
+    const url = transliterate(title).toLowerCase()
     const trimmedTitle = title.trim()
 
     return {
         title: trimmedTitle.charAt(0).toUpperCase() + trimmedTitle.slice(1),
-        url: link,
+        url,
+    }
+}
+
+export const createProductData = (title) => {
+    const url = transliterate(title).toLowerCase()
+
+    const trimmedTitle = title.trim()
+
+    const brand = trimmedTitle.split(' ')[0].toLowerCase()
+
+    const titleToUppercase = trimmedTitle
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ')
+
+    return {
+        title: titleToUppercase,
+        brand,
+        url
     }
 }
 
@@ -36,4 +55,6 @@ export const createCatalogLinks = (title) => {
 //     else console.log('success')
 // })
 
-export default createCatalogLinks;
+export default {
+    createCatalogLinks, createProductData
+}

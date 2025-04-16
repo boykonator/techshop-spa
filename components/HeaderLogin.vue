@@ -1,6 +1,6 @@
 <template>
   <div class="header-login-container">
-  <div class="header-login">
+    <div class="header-login">
       <div class="header-login-title">Получайте бонусы, сохраняйте и отслеживайте заказы</div>
 
       <button @click="toggleLoginModal" class="header-login-button">Войти</button>
