@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="isFocusedInput || isFocusedCatalog || state.showLoginModal || state.showDeleteModal" class="focus" @click.self="toggleFocus"/>
+    <div v-if="isFocusedInput || isFocusedCatalog || state.showLoginModal || state.showAdminModal" class="focus" @click.self="toggleFocus"/>
 
     <nav>
       <div class="header">
@@ -73,7 +73,7 @@ const toggleFocus = () => {
   if (isFocusedInput.value) isFocusedInput.value = false;
   if (isFocusedCatalog.value) isFocusedCatalog.value = false;
   if (state.showLoginModal) state.showLoginModal = false;
-  if (state.showDeleteModal) state.showDeleteModal = false;
+  if (state.showAdminModal) state.showAdminModal = false;
 }
 </script>
 

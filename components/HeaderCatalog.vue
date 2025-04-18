@@ -20,12 +20,12 @@
     <div v-if="isCatalogOpened" class="header-catalog-wrapper">
       <div class="header-catalog-menu">
         <div
-            v-for="item in catalog"
+            v-for="(item, index) in catalog"
             :key="item.title"
             class="header-catalog-menu-link"
             @mouseenter="activeTabIndex = index"
             :class="{ active: activeTabIndex === index }"
-            @click="navigateTo(`/catalog/${item.url}`)"
+            @click="() => { navigateTo(`/catalog/${item.url}`); toggleCatalog(false) }"
         >
           {{ item.title }}
         </div>
@@ -37,15 +37,18 @@
             :key="index"
             class="header-catalog-submenu"
         >
-          <div class="header-catalog-submenu-link-title" @click="navigateTo(`/catalog/${category.url}`)">
+          <div
+              class="header-catalog-submenu-link-title"
+              @click="() => { navigateTo(`/catalog/${category.url}`); toggleCatalog(false) }"
+          >
             {{ category.title }}
           </div>
 
           <div
               v-for="item in category.subcategories"
               :key="item.url"
-              @click="navigateTo(`/catalog/${item.url}`)"
               class="header-catalog-submenu-link"
+              @click="() => { navigateTo(`/catalog/${item.url}`); toggleCatalog(false) }"
           >
             <span class="header-catalog-submenu-link-text">
               <span v-html="splitTitle(item.title)[0]"></span>

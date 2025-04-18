@@ -167,8 +167,8 @@ const hoveredCardIndex = ref(null);
       }
 
       &-image {
-        height: 152px;
-        width: 152px;
+        max-height: 132px;
+        max-width: 132px;
       }
 
       &-text {

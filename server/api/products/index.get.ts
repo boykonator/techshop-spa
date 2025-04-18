@@ -4,9 +4,9 @@ export default defineEventHandler(async (event) => {
     const query = getQuery(event)
     const _id = query._id
 
-    if (!query) {
+    if (!_id) {
+        // If no _id provided, return all products
         const products = await Product.find()
-
         return products
     }
 

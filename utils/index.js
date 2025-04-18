@@ -47,6 +47,36 @@ export const createProductData = (title) => {
     }
 }
 
+import {useStateStore} from "~/stores/state";
+
+let timeout = null
+
+export const showSuccessMessage = (data) => {
+    const state = useStateStore()
+
+    if (data.success) {
+        state.instanceCreated = true
+
+        if (timeout) {
+            clearTimeout(timeout)
+        }
+
+        timeout = setTimeout(() => {
+            state.instanceCreated = null
+        }, 3000)
+    } else {
+        state.instanceCreated = false
+
+        if (timeout) {
+            clearTimeout(timeout)
+        }
+
+        timeout = setTimeout(() => {
+            state.instanceCreated = null
+        }, 3000)
+    }
+}
+
 
 // const catalogLinks = createCatalogLinks(catalog);
 //
@@ -54,7 +84,3 @@ export const createProductData = (title) => {
 //     if (err) console.error(err);
 //     else console.log('success')
 // })
-
-export default {
-    createCatalogLinks, createProductData
-}

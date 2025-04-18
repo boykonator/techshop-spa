@@ -4,8 +4,7 @@
 
     <div>
       <button @click="navigateTo('/admin/add')">Go to Add Page</button>
-      <button @click="navigateTo('/admin/add')">Go to Delete Page</button>
-
+      <button @click="navigateTo('/admin/product')">Go to Product Page</button>
       <br><br>
     </div>
 
@@ -22,7 +21,10 @@
             </tr>
             </thead>
             <tbody>
-            <tr v-for="category of sortedCatalog.length ? sortedCatalog : catalog" :key="category._id">
+            <tr v-for="(category, index) of sortedCatalog.length ? sortedCatalog : catalog" :key="category._id">
+              <td>
+                {{ index + 1}}.
+              </td>
               <td>
                 {{ category.title }}
               </td>
@@ -32,16 +34,21 @@
               <td>
                 {{ category._id }}
               </td>
+              <td class="edit-button" @click="showEditModal(category._id)">
+                <Icon name="edit" />
+              </td>
               <td class="delete-button" @click="showDeleteModal(category._id)">
                 <Icon name="cross" />
               </td>
-              <DeleteModal v-if="state.showDeleteModal && deleteIndex === category._id" :category="category" />
+              <AdminModalCategory v-if="state.showAdminModal && editIndex === category._id" :category="category" />
+              <DeleteModal v-if="state.showAdminModal && deleteIndex === category._id" :category="category" />
             </tr>
             </tbody>
           </table>
         </div>
       </div>
       <br>
+
       <div>
         <h2>Subcategories:</h2>
         <div>
@@ -54,7 +61,10 @@
             </tr>
             </thead>
             <tbody>
-            <tr v-for="category of sortedSubcategories.length ? sortedSubcategories : subcategories" :key="category._id">
+            <tr v-for="(category, index) of sortedSubcategories.length ? sortedSubcategories : subcategories" :key="category._id">
+              <td>
+                {{ index + 1}}.
+              </td>
               <td>
                 {{ category.title }}
               </td>
@@ -64,18 +74,20 @@
               <td>
                 {{ category._id }}
               </td>
+              <td class="edit-button" @click="showEditModal(category._id)">
+                <Icon name="edit" />
+              </td>
               <td class="delete-button" @click="showDeleteModal(category._id)">
                 <Icon name="cross" />
               </td>
-              <DeleteModal v-if="state.showDeleteModal && deleteIndex === category._id" :category="category" />
+              <AdminModalSubcategory v-if="state.showAdminModal && editIndex === category._id" :category="category" />
+              <DeleteModal v-if="state.showAdminModal && deleteIndex === category._id" :category="category" />
             </tr>
             </tbody>
           </table>
         </div>
       </div>
     </div>
-
-
   </div>
 </template>
 
@@ -88,9 +100,13 @@ const store = useCatalogStore()
 import {useStateStore} from "~/stores/state";
 const state = useStateStore()
 
-const categoriesMenu = ['title', 'parentCategory', '_id']
 
-const deleteIndex = ref()
+console.log()
+
+const categoriesMenu = ['#','title', 'parentCategory', '_id']
+
+const deleteIndex = ref<string | null>(null)
+const editIndex = ref<string | null>(null)
 
 const catalog = computed(() => store.catalog)
 const subcategories = computed(() => store.categories)
@@ -132,7 +148,12 @@ const sortArray = (array: Array<ICatalogItem | ICategory>, arrayName: 'catalog' 
 
 const showDeleteModal = (index: string) => {
   deleteIndex.value = index
-  state.showDeleteModal = true
+  state.showAdminModal = true
+}
+
+const showEditModal = (index: string) => {
+  editIndex.value = index
+  state.showAdminModal = true
 }
 
 const getSubcategoryParentTitle = (id: string) => {
@@ -141,6 +162,15 @@ const getSubcategoryParentTitle = (id: string) => {
 
   return category ? category.title : subcategory?.title
 }
+
+watch(
+    () => state.showAdminModal, () => {
+      if (state.showAdminModal === false) {
+        deleteIndex.value = null
+        editIndex.value = null
+      }
+    }
+)
 
 watch(
     () => [store.catalog, store.categories], () => {
@@ -157,7 +187,15 @@ onBeforeRouteLeave(() => {
 </script>
 
 <style scoped lang="scss">
+.edit-button {
+  cursor: pointer;
+}
 .delete-button {
   cursor: pointer;
+}
+
+.edit-category {
+  display: flex;
+  gap: 20px;
 }
 </style>

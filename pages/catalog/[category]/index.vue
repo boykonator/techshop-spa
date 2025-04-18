@@ -1,43 +1,22 @@
 <template>
   <div>
-    <div class="catalog-breadcrumb-list">
-      <div
-          v-for="(item, index) in store.breadcrumbArray"
-          :key="item.title"
-          @click="navigateTo(`/catalog/${item.url}`)"
-          class="catalog-breadcrumb-list-content"
-      >
-        <span
-            :class="index !== store.breadcrumbArray.length - 1 ? 'catalog-breadcrumb-list-item': 'catalog-breadcrumb-list-item-last'">{{
-            item.title
-          }}</span>
-        <Icon
-            name="arrow-right"
-            size="16"
-            class="catalog-breadcrumb-list-arrow"
-            v-show="index !== store.breadcrumbArray.length - 1"
-        />
-      </div>
-    </div>
+    <Breadcrumbs />
 
     <div class="catalog-title">
       {{ store.breadcrumbArray[store.breadcrumbArray.length - 1]?.title }}
       <span v-if="products.length">{{ products.length }} товаров</span>
     </div>
 
-    <div v-if="products.length" class="catalog-content">
+    <div v-if="products.length" class="catalog-content-products">
       <div
           v-for="item in products"
           :key="item.title"
-          class="catalog-content-card-container"
-          @click="navigateTo(`/products/${item.url}`)"
+          class="catalog-content-products-card-container"
+          @click="navigateTo(`/product/${item.url}`)"
       >
         <div class="catalog-content-card">
-          <div class="catalog-content-card-inner">
-            <div class="catalog-content-card-face card-default">
-              <div class="catalog-content-card-text">{{ item.title }}</div>
-            </div>
-          </div>
+          <img class="catalog-content-card-image" :src="`/images/${item.title}/1.jpg.webp`" :alt="`/images/${item.title}/`">
+          <div class="catalog-content-card-text">{{ item.title }}</div>
         </div>
       </div>
     </div>
@@ -50,11 +29,8 @@
           @click="navigateTo(`/catalog/${item.url}`)"
       >
         <div class="catalog-content-card">
-          <div class="catalog-content-card-inner">
-            <div class="catalog-content-card-face card-default">
-              <div class="catalog-content-card-text">{{ item.title }}</div>
-            </div>
-          </div>
+          <img class="catalog-content-card-image" :src="`/images/catalog/${item.url}.png`" :alt="item.title" />
+          <div class="catalog-content-card-text">{{ item.title }}</div>
         </div>
       </div>
     </div>
@@ -68,6 +44,7 @@ import {useRoute} from 'vue-router';
 const route = useRoute();
 
 import {useCatalogStore} from "~/stores/catalog.ts";
+import Breadcrumbs from "~/components/Breadcrumbs.vue";
 const store = useCatalogStore()
 
 const products = ref([])
@@ -97,7 +74,7 @@ watch(
     () => store.categoryTree,
     (newVal) => {
       if (newVal.length) {
-        store.createBreadcrumbs(route.params.category)
+        store.createBreadcrumbs(route.params.category, false)
         requestProducts()
         console.log(store.breadcrumbs)
       }
@@ -107,29 +84,6 @@ watch(
 </script>
 
 <style scoped lang="scss">
-.catalog-breadcrumb-list {
-  display: flex;
-  align-content: center;
-  font-size: 13px;
-
-  &-content {
-    display: flex;
-    align-items: center;
-  }
-
-  &-item {
-    cursor: pointer;
-
-    &-last {
-      color: $graphite-gray;
-    }
-  }
-
-  &-arrow {
-    transform: rotate(-90deg);
-    color: $graphite-gray;
-  }
-}
 
 .catalog {
   &-title {
@@ -174,70 +128,28 @@ watch(
     }
 
     &-card {
-      position: relative;
       width: 240px;
       height: 220px;
       background: #fff;
       border-radius: 8px;
-      overflow: hidden;
       box-shadow: 0 2px 4px -2px $dark-gray;
       transition: box-shadow 0.3s ease-in-out;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
 
       &:hover {
         box-shadow: 0 10px 20px 1px $mid-gray;
       }
 
-      &-inner {
-        position: relative;
-        width: 100%;
-        height: 100%;
-      }
-
-      &-face {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        padding: 16px;
-        box-sizing: border-box;
-        overflow: hidden;
-        transition: opacity 0.4s ease-in-out;
-        opacity: 1;
-        z-index: 1;
-        background: #fff;
-      }
-
-      .card-default {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: space-around;
-        text-align: center;
-      }
-
-      .card-hover {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        justify-content: flex-start;
-        text-align: left;
-
-        opacity: 0;
-        z-index: 2;
-      }
-
-      .card-visible {
-        opacity: 1;
-      }
-
-      .card-hidden {
-        opacity: 0;
-      }
-
       &-image {
-        height: 152px;
-        width: 152px;
+        max-height: 132px;
+        max-width: 132px;
+        object-fit: contain;
       }
 
       &-text {
@@ -247,27 +159,15 @@ watch(
         word-wrap: break-word;
         text-align: center;
       }
+    }
 
-      &-title {
-        font-size: 16px;
-        font-weight: bold;
-        margin-bottom: 12px;
-        cursor: pointer;
+    &-products {
+      display: flex;
+      flex-direction: column;
+      max-height: 10vh;
 
-        &:hover {
-          color: $secondary-color;
-        }
-      }
+      &-card {
 
-      &-category {
-        font-size: 14px;
-        line-height: 18px;
-        padding-bottom: 10px;
-        cursor: pointer;
-
-        &:hover {
-          color: $secondary-color;
-        }
       }
     }
   }
