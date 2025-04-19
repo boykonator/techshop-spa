@@ -1,14 +1,12 @@
-<template>
-  <div class="add-modal" v-if="state.isAddOrEdit === 'edit'">
-    <div class="add-modal-content">
-      <div><strong>
-        Edit Category
-      </strong></div>
+<template v-if="state.showAdminModal && state.isAddOrEdit">
+  <div class="edit-modal" v-if="state.isAddOrEdit === 'edit' && state.showAdminModal">
+    <div class="edit-modal-content">
+      <div class="modal-heading">Edit Category</div>
 
-      <p>Title</p>
-      <input type="text" v-model="propsCategory.title" />
+      <p class="label">Title</p>
+      <input type="text" v-model="propsCategory.title"/>
 
-      <p>Category</p>
+      <p class="label">Parent Category</p>
       <select name="" id="" v-model="propsCategory.parentCategory">
         <option :value="null">
           null (Parent Category)
@@ -19,28 +17,27 @@
       </select>
 
       <button
-          @click="store.createCategory(category.title, category.parent)"
+          @click="store.editCategory(propsCategory.title, propsCategory.parentCategory, propsCategory._id)"
           :disabled="propsCategory.title === props.category.title && propsCategory.parentCategory === props.category.parentCategory"
           class="submit"
-      >Edit category</button>
+      >Edit category
+      </button>
 
-      <Icon name="cross" class="add-modal-close" @click="state.showAdminModal = false" />
+      <Icon name="cross" class="edit-modal-close" @click="state.showAdminModal = false"/>
     </div>
 
     <div v-if="state.instanceCreated" class="success">Category updated successfully!</div>
     <div v-if="state.instanceCreated === false" class="error">Something wrong happened..</div>
   </div>
 
-  <div class="add-modal" v-if="state.isAddOrEdit === 'add'">
-    <div class="add-modal-content">
-      <div><strong>
-        Add Category
-      </strong></div>
+  <div class="add-page-modal" v-if="state.isAddOrEdit === 'add'">
+    <div class="add-page-modal-content">
+      <div class="modal-heading">Add Category</div>
 
-      <p>Title</p>
-      <input type="text" v-model="category.title" />
+      <p class="label">Title</p>
+      <input type="text" v-model="category.title"/>
 
-      <p>Category</p>
+      <p class="label">Parent Category</p>
       <select name="" id="" v-model="category.parent">
         <option :value="null">
           null (Parent Category)
@@ -54,9 +51,10 @@
           @click="store.createCategory(category.title, category.parent)"
           :disabled="!category.title.length"
           class="submit"
-      >Create category</button>
+      >Create category
+      </button>
 
-      <Icon name="cross" class="add-modal-close" @click="state.showAdminModal = false" />
+      <Icon name="cross" class="add-page-modal-close" @click="state.showAdminModal = false"/>
     </div>
     <div v-if="state.instanceCreated" class="success">Category created successfully!</div>
     <div v-if="state.instanceCreated === false" class="error">Such category was already created!</div>
@@ -64,23 +62,20 @@
 </template>
 
 <script setup>
-import { useCatalogStore } from "~/stores/catalog"
-const store = useCatalogStore()
-
+import {useCatalogStore} from "~/stores/catalog"
 import {useStateStore} from "~/stores/state";
+
+const store = useCatalogStore()
 const state = useStateStore()
 
 const props = defineProps({
-  category: {},
+  category: {
+    type: Object,
+    default: null
+  }
 })
 
-const propsCategory = ref({
-  title: props.category.title,
-  parentCategory: props.category.parentCategory,
-})
-
-console.log('category: ',propsCategory)
-console.log(state.isAddOrEdit)
+const propsCategory = ref({ ...props.category })
 
 const category = ref({
   title: '',

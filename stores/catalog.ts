@@ -1,8 +1,7 @@
 import {defineStore} from 'pinia'
 import axios from "axios"
-import type {ICatalogItem, ICategory} from "~/types/catalog"
+import type {ICatalogItem, ICategory, IProduct} from "~/types/catalog"
 import {createCatalogLinks, showSuccessMessage} from "~/utils/index.js"
-import {useStateStore} from "~/stores/state"
 
 export const useCatalogStore = defineStore('catalog', () => {
     const activeTab = ref('bytovaya-tehnika')
@@ -30,56 +29,52 @@ export const useCatalogStore = defineStore('catalog', () => {
     }
 
     const buildCategoryTree = () => {
-        const catalogMap = new Map()
-        const categoryMap = new Map()
+        const map = new Map()
         categoryTree.value = []
 
-        catalog.value.forEach((catalogItem) => {
-            const entry = {
-                _id: catalogItem._id,
-                title: catalogItem.title,
-                url: catalogItem.url,
-                parentCategory: catalogItem.parentCategory,
-                categories: []
-            }
-            catalogMap.set(catalogItem._id, entry)
-            categoryMap.set(catalogItem._id, entry)
+        catalog.value.forEach(item => {
+            map.set(item._id, { ...item, categories: [] })
         })
 
-        categories.value.forEach((category) => {
-            const entry = {
-                _id: category._id,
-                title: category.title,
-                url: category.url,
-                parentCategory: category.parentCategory,
-                subcategories: []
-            }
-            categoryMap.set(category._id, entry)
+        categories.value.forEach(item => {
+            map.set(item._id, { ...item, subcategories: [] })
+        })
 
-            const parent = categoryMap.get(category.parentCategory)
+        categories.value.forEach(item => {
+            const entry = map.get(item._id)
+            const parent = map.get(item.parentCategory)
+
             if (parent?.categories) {
                 parent.categories.push(entry)
             } else if (parent?.subcategories) {
                 parent.subcategories.push(entry)
             } else {
-                console.warn('Parent not found or has no array to push into:', category)
+                categoryTree.value.push(entry)
             }
         })
 
-        for (const [, value] of categoryMap) {
-            if (value.subcategories?.length === 0) {
-                delete value.subcategories
-            }
-        }
-
-        categoryTree.value = Array.from(catalogMap.values())
-        console.log('Final structure:', categoryTree.value)
+        categoryTree.value = catalog.value.map(item => map.get(item._id))
     }
 
-    const createCategory = async (title, parentCategory) => {
-        const state = useStateStore()
+    const editCategory = async (title: string, parentCategory: string, _id: string) => {
+        try {
+            const category = createCatalogLinks(title)
 
+            const { data } = await axios.put(`/api/catalog/${_id}`, {
+                title: category.title,
+                parentCategory: parentCategory,
+                url: category.url,
+            })
 
+            console.log(data)
+            showSuccessMessage(data)
+            await fetchCatalog()
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    const createCategory = async (title: string, parentCategory: string) => {
         try {
             const category = createCatalogLinks(title)
 
@@ -88,16 +83,14 @@ export const useCatalogStore = defineStore('catalog', () => {
                 parentCategory: parentCategory,
                 url: category.url,
             })
-            console.log('state.instanceCreated', state.instanceCreated)
-            showSuccessMessage(data, state.instanceCreated)
-            console.log('state.instanceCreated 2', state.instanceCreated)
+            showSuccessMessage(data)
             await fetchCatalog()
         } catch (error) {
             console.error(error)
         }
     }
 
-    const product = ref({})
+    const product = ref<IProduct | null>(null)
 
     const requestProduct = async () => {
         const route = useRoute()
@@ -138,8 +131,6 @@ export const useCatalogStore = defineStore('catalog', () => {
                     }
                 }
             }
-
-
         } else {
             for (const parent of categoryTree.value) {
                 if (parent.url === url) {
@@ -165,10 +156,10 @@ export const useCatalogStore = defineStore('catalog', () => {
     }
 
     const breadcrumbArray = computed(() => [
-        breadcrumbs.value.catalog,
-        breadcrumbs.value.parent,
-        breadcrumbs.value.category,
-        breadcrumbs.value.subcategory,
+        breadcrumbs.value?.catalog,
+        breadcrumbs.value?.parent,
+        breadcrumbs.value?.category,
+        breadcrumbs.value?.subcategory,
     ].filter(Boolean))
 
     return {
@@ -181,6 +172,7 @@ export const useCatalogStore = defineStore('catalog', () => {
         product,
         fetchCatalog,
         createCategory,
+        editCategory,
         createBreadcrumbs
     }
 })

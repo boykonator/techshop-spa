@@ -1,15 +1,15 @@
 <template>
-  <div class="add-modal">
-    <div class="add-modal-content">
-      <div><strong>Add Product</strong></div>
+  <div class="add-page-modal">
+    <div class="add-page-modal-content">
+      <div class="modal-heading">Add Product</div>
 
-      <p>Title</p>
+      <p class="label">Title</p>
       <input type="text" v-model="product.title" />
 
-      <p>Description</p>
+      <p class="label">Description</p>
       <textarea type="text" v-model="product.description" />
 
-      <p>Category</p>
+      <p class="label">Category</p>
 
       <select v-model="product.category">
         <option value="" disabled hidden>Choose category</option>
@@ -36,10 +36,10 @@
         </template>
       </select>
 
-      <p>Price</p>
+      <p class="label">Price</p>
       <input type="number" v-model="product.price" />
 
-      <p>Stock</p>
+      <p class="label">Stock</p>
       <input type="number" v-model="product.stock" />
 
       <button
@@ -48,7 +48,7 @@
           class="submit"
       >Create Product</button>
 
-      <Icon name="cross" class="add-modal-close" @click="state.showAdminModal = false" />
+      <Icon name="cross" class="add-page-modal-close" @click="state.showAdminModal = false" />
     </div>
 
     <div v-if="state.instanceCreated" class="success">Product created successfully!</div>
@@ -58,11 +58,10 @@
 <script setup>
 import {createProductData, showSuccessMessage} from "~/utils/index.js"
 import axios from "axios"
-
 import { useCatalogStore } from "~/stores/catalog"
-const store = useCatalogStore()
-
 import {useStateStore} from "~/stores/state";
+
+const store = useCatalogStore()
 const state = useStateStore()
 
 const product = ref({

@@ -54,7 +54,7 @@ let timeout = null
 export const showSuccessMessage = (data) => {
     const state = useStateStore()
 
-    if (data.success) {
+    if (data) {
         state.instanceCreated = true
 
         if (timeout) {

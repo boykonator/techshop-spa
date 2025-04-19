@@ -9,11 +9,8 @@
 import { useCatalogStore } from "~/stores/catalog"
 const store = useCatalogStore()
 
-import { useUserStore } from '~/stores/user'
-const userStore = useUserStore()
-
-// console.log('userStore: ', userStore)
-// console.log('store: ', store)
+// import { useUserStore } from '~/stores/user'
+// const userStore = useUserStore()
 
 onMounted(() => {
   store.fetchCatalog()
@@ -31,6 +28,20 @@ a {
   &:hover {
     color: $secondary-color
   }
+}
+
+.label {
+  margin: 6px 0 4px 0;
+  font-weight: bold;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.modal-heading {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .app {
@@ -82,5 +93,74 @@ button {
     cursor: not-allowed;
     opacity: 0.6;
   }
+}
+
+.edit {
+  &-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    min-width: 360px;
+    max-width: 600px;
+    z-index: 5;
+
+    &-close {
+      cursor: pointer;
+      position: absolute;
+      right: 10px;
+      top: 8px;
+    }
+
+    &-content {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+}
+
+.add-page {
+  &-modal {
+    position: absolute;
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 300px;
+    z-index: 5;
+
+    &-close {
+      cursor: pointer;
+      position: absolute;
+      right: 10px;
+      top: 8px;
+    }
+
+    &-content {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+}
+
+.buttons-container {
+  display: flex;
+  gap: 8px;
+}
+
+.error {
+  margin-top: 4px;
+  color: $invalid
+}
+
+.success {
+  margin-top: 4px;
+  color: $success
+}
+
+.submit {
+  margin-top: 12px;
 }
 </style>

@@ -1,6 +1,7 @@
 <template>
   <div class="delete-modal">
-    <div class="delete-modal-text">Are you sure you want to delete <strong>{{ props.category.title }}</strong>?</div>
+    <div class="modal-heading">Deleting entity</div>
+    <div class="delete-modal-text">Are you sure you want to delete <strong>{{ props.category?.title }}</strong>?</div>
     <Icon name="cross" class="delete-modal-cross" @click="state.showAdminModal = false" />
     <div class="delete-modal-button-container">
       <button
@@ -14,11 +15,10 @@
 
 <script setup lang="ts">
 import axios from "axios";
-
 import { useCatalogStore } from "~/stores/catalog"
-const store = useCatalogStore()
-
 import {useStateStore} from "~/stores/state";
+
+const store = useCatalogStore()
 const state = useStateStore()
 
 const props = defineProps({
@@ -41,7 +41,10 @@ const deleteCategory = async (id: string) => {
 
 <style scoped lang="scss">
 .delete-modal {
-  position: absolute;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   background: white;
   padding: 32px 24px 16px 24px;
   border-radius: 8px;
@@ -69,6 +72,7 @@ const deleteCategory = async (id: string) => {
     background: $invalid;
     border-color: rgba($invalid, 0.5);
     cursor: pointer;
+    margin-top: 8px;
 
     &:hover {
       background: rgba($invalid, 0.9);

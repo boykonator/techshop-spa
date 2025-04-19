@@ -1,15 +1,15 @@
-<template>
-  <div class="add-modal" v-if="state.isAddOrEdit === 'edit'">
-    <div class="add-modal-content">
-      <div><strong>Edit Subcategory</strong></div>
+<template v-if="state.showAdminModal && state.isAddOrEdit">
+  <div class="edit-modal" v-if="state.isAddOrEdit === 'edit'">
+    <div class="edit-modal-content">
+      <div class="modal-heading">Edit Subcategory</div>
 
-      <p>Title</p>
+      <p class="label">Title</p>
       <input type="text" v-model="propsSubcategory.title" />
 
-      <p>Category</p>
-      <select v-model="propsSubcategory.parent">
-        <option value="" disabled hidden>Choose category</option>
-
+      <p class="label">Parent Category</p>
+      <select v-model="propsSubcategory.parentCategory">
+        <option :value="null">null (Parent Category)</option>
+        <option disabled>──────────────</option>
         <template v-for="parent in groupedCategories" :key="parent.title">
           <option :value="parent._id" style="font-weight: bold">
             {{ parent.title }}
@@ -20,34 +20,35 @@
               :key="child._id"
               :value="child._id"
           >
-            └ {{ child.title }}
+            {{ child.title }}
           </option>
         </template>
       </select>
 
       <button
-          @click="store.editCategory(propsSubcategory._id, propsSubcategory.title, propsSubcategory.parent)"
-          :disabled="propsSubcategory.title === props.category.title && propsSubcategory.parent === props.category.parent"
+          @click="store.editCategory(propsSubcategory.title, propsSubcategory.parentCategory, propsSubcategory._id)"
+          :disabled="propsSubcategory.title === props.category.title && propsSubcategory.parentCategory === props.category.parentCategory"
           class="submit"
       >
         Edit subcategory
       </button>
 
-      <Icon name="cross" class="add-modal-close" @click="state.showAdminModal = false" />
+      <Icon name="cross" class="edit-modal-close" @click="state.showAdminModal = false" />
     </div>
 
     <div v-if="state.instanceCreated" class="success">Subcategory updated successfully!</div>
-    <div v-if="state.instanceCreated === false" class="error">Something wrong happened..</div>
+    <div v-if="state.instanceCreated === false" class="error">Oops! Couldn't update the subcategory.</div>
   </div>
 
-  <div class="add-modal" v-if="state.isAddOrEdit === 'add'">
-    <div class="add-modal-content">
-      <div><strong>Add Subcategory</strong></div>
+  <div class="add-page-modal" v-if="state.isAddOrEdit === 'add'">
+    <div class="add-page-modal-content">
+      <div class="modal-heading">Add Subcategory</div>
 
-      <p>Title</p>
+
+      <p class="label">Title</p>
       <input type="text" v-model="subcategory.title" />
 
-      <p>Category</p>
+      <p class="label">Parent Category</p>
       <select v-model="subcategory.parent">
         <option value="" disabled hidden>Choose category</option>
         <optgroup
@@ -73,23 +74,26 @@
         Create subcategory
       </button>
 
-      <Icon name="cross" class="add-modal-close" @click="state.showAdminModal = false" />
+      <Icon name="cross" class="add-page-modal-close" @click="state.showAdminModal = false" />
     </div>
 
     <div v-if="state.instanceCreated" class="success">Subcategory created successfully!</div>
-    <div v-if="state.instanceCreated === false" class="error">Such subcategory was already created!</div>
+    <div v-if="state.instanceCreated === false" class="error">Looks like that subcategory already exists.</div>
   </div>
 </template>
 
 <script setup>
 import { useCatalogStore } from "~/stores/catalog"
-const store = useCatalogStore()
-
 import { useStateStore } from "~/stores/state"
+
+const store = useCatalogStore()
 const state = useStateStore()
 
 const props = defineProps({
-  category: Object
+  category: {
+    type: Object,
+    default: null
+  }
 })
 
 const propsSubcategory = ref({ ...props.category })
@@ -106,14 +110,17 @@ const groupedCategories = computed(() => {
     if (!category.parentCategory) return
 
     const parent = store.catalog.find(c => c._id === category.parentCategory)
-
     if (!parent) return
 
-    if (!groupMap.has(parent.title)) {
-      groupMap.set(parent.title, { title: parent.title, children: [] })
+    if (!groupMap.has(parent._id)) {
+      groupMap.set(parent._id, {
+        _id: parent._id,
+        title: parent.title,
+        children: []
+      })
     }
 
-    groupMap.get(parent.title).children.push(category)
+    groupMap.get(parent._id).children.push(category)
   })
 
   return Array.from(groupMap.values())

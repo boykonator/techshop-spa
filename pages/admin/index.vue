@@ -2,7 +2,7 @@
   <div>
     <h1>Admin Page</h1>
 
-    <div>
+    <div class="buttons-container">
       <button @click="navigateTo('/admin/add')">Go to Add Page</button>
       <button @click="navigateTo('/admin/product')">Go to Product Page</button>
       <br><br>
@@ -47,7 +47,6 @@
           </table>
         </div>
       </div>
-      <br>
 
       <div>
         <h2>Subcategories:</h2>
@@ -93,15 +92,11 @@
 
 <script setup lang="ts">
 import type {ICatalogItem, ICategory} from "~/types/catalog"
-
 import { useCatalogStore } from "~/stores/catalog"
-const store = useCatalogStore()
-
 import {useStateStore} from "~/stores/state";
+
+const store = useCatalogStore()
 const state = useStateStore()
-
-
-console.log()
 
 const categoriesMenu = ['#','title', 'parentCategory', '_id']
 
