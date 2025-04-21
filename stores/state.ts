@@ -1,5 +1,4 @@
 import {defineStore} from 'pinia'
-import { useRoute } from 'vue-router';
 
 export const useStateStore = defineStore('state', () => {
     const showLoginModal = ref(false)
@@ -7,10 +6,7 @@ export const useStateStore = defineStore('state', () => {
     const instanceCreated = ref(null)
     const isClicked = ref(false)
 
-    const route = useRoute();
-    const isAddOrEdit = computed(() => {
-        return route.path.split('/').includes('add') ? 'add' : 'edit'
-    })
+    const isAddOrEdit = ref(null)
 
     return {
         showLoginModal,

@@ -1,11 +1,23 @@
 export default defineEventHandler(async (event) => {
-    const data = event.context.params
-    console.log(data)
-    const product = await Product.findByIdAndUpdate(data)
+    const { id } = event.context.params
+    const body = await readBody(event)
 
-    if (product) {
-        return { message: 'Product updated successfully' };
-    } else {
-        return { message: 'Product not found', _id: data };
+    try {
+        const updatedProduct = await Product.findByIdAndUpdate(
+            id,
+            body,
+            { new: true }
+        )
+
+        if (updatedProduct) {
+            return { message: 'Product updated successfully', product: updatedProduct }
+        } else {
+            return { message: 'Product not found', _id: id }
+        }
+    } catch (error) {
+        return {
+            message: 'Error updating product',
+            error: error.message
+        }
     }
 })

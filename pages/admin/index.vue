@@ -3,14 +3,26 @@
     <h1>Admin Page</h1>
 
     <div class="buttons-container">
-      <button @click="navigateTo('/admin/add')">Go to Add Page</button>
       <button @click="navigateTo('/admin/product')">Go to Product Page</button>
-      <br><br>
     </div>
 
-    <div class="edit-category">
-      <div>
-        <h2>Main categories:</h2>
+    <div class="admin-page">
+      <div class="admin-page-column">
+        <h2>Main categories: </h2>
+
+        <div class="admin-page-column-header">
+          <div class="admin-page-input-container">
+            <p class="admin-page-input-title">Поиск по каталогу:</p>
+            <input type="text" v-model="searchCategory">
+            <Icon name="cross" class="admin-page-input-delete-icon" @click="searchCategory = null" v-show="searchCategory" />
+          </div>
+
+          <div>
+            <button @click="toggleModal('category')">Add Category</button>
+            <AdminModalCategory v-if="state.showAdminModal && showModal === 'category'" />
+          </div>
+        </div>
+
         <div>
           <table>
             <thead>
@@ -21,7 +33,7 @@
             </tr>
             </thead>
             <tbody>
-            <tr v-for="(category, index) of sortedCatalog.length ? sortedCatalog : catalog" :key="category._id">
+            <tr v-for="(category, index) of sortedCatalog.length ? sortedCatalog : filteredCategories" :key="category._id">
               <td>
                 {{ index + 1}}.
               </td>
@@ -41,15 +53,31 @@
                 <Icon name="cross" />
               </td>
               <AdminModalCategory v-if="state.showAdminModal && editIndex === category._id" :category="category" />
-              <DeleteModal v-if="state.showAdminModal && deleteIndex === category._id" :category="category" />
+              <DeleteModal v-if="state.showAdminModal && deleteIndex === category._id" :entity="category" />
             </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <div>
+      <div class="admin-page-column">
         <h2>Subcategories:</h2>
+
+        <div class="admin-page-column-header">
+          <div class="admin-page-input-container">
+            <p class="admin-page-input-title">Поиск по подкатегориям:</p>
+            <div class="admin-page-input-container">
+              <input type="text" v-model="searchSubcategory">
+              <Icon name="cross" class="admin-page-input-delete-icon" @click="searchSubcategory = null" v-show="searchSubcategory" />
+            </div>
+          </div>
+
+          <div>
+            <button @click="toggleModal('subcategory')">Add Subcategory</button>
+            <AdminModalSubcategory v-if="state.showAdminModal && showModal === 'subcategory'" />
+          </div>
+        </div>
+
         <div>
           <table>
             <thead>
@@ -60,7 +88,7 @@
             </tr>
             </thead>
             <tbody>
-            <tr v-for="(category, index) of sortedSubcategories.length ? sortedSubcategories : subcategories" :key="category._id">
+            <tr v-for="(category, index) of sortedSubcategories.length ? sortedSubcategories : filteredSubcategories" :key="category._id">
               <td>
                 {{ index + 1}}.
               </td>
@@ -68,7 +96,7 @@
                 {{ category.title }}
               </td>
               <td>
-                {{ getSubcategoryParentTitle(category.parentCategory) }}
+                {{ store.getSubcategoryParentTitle(category.parentCategory) }}
               </td>
               <td>
                 {{ category._id }}
@@ -80,7 +108,7 @@
                 <Icon name="cross" />
               </td>
               <AdminModalSubcategory v-if="state.showAdminModal && editIndex === category._id" :category="category" />
-              <DeleteModal v-if="state.showAdminModal && deleteIndex === category._id" :category="category" />
+              <DeleteModal v-if="state.showAdminModal && deleteIndex === category._id" :entity="category" />
             </tr>
             </tbody>
           </table>
@@ -100,11 +128,14 @@ const state = useStateStore()
 
 const categoriesMenu = ['#','title', 'parentCategory', '_id']
 
+const catalog = computed(() => store.catalog)
+const subcategories = computed(() => store.categories)
+
 const deleteIndex = ref<string | null>(null)
 const editIndex = ref<string | null>(null)
 
-const catalog = computed(() => store.catalog)
-const subcategories = computed(() => store.categories)
+const searchCategory = ref<string | null>(null)
+const searchSubcategory = ref<string | null>(null)
 
 const sortedCatalog = ref<Array<ICatalogItem | ICategory>>([])
 const sortedSubcategories = ref<Array<ICatalogItem | ICategory>>([])
@@ -125,20 +156,52 @@ const sortArray = (array: Array<ICatalogItem | ICategory>, arrayName: 'catalog' 
   currentSort.value.arrayName = arrayName
   currentSort.value.key = key
 
-  const sorted = [...array].sort((a, b) => {
-    const aValue = (a[key] ?? '').toString().toLowerCase()
-    const bValue = (b[key] ?? '').toString().toLowerCase()
+  let sorted
 
-    return currentSort.value.direction
-        ? aValue.localeCompare(bValue)
-        : bValue.localeCompare(aValue)
-  })
+  if (key === '#') {
+    const indexedArray = array.map((item, index) => ({ item, index }))
+    sorted = indexedArray.sort((a, b) =>
+        currentSort.value.direction ? a.index - b.index : b.index - a.index
+    ).map(el => el.item)
+  } else {
+    sorted = [...array].sort((a, b) => {
+      const aValue = (a[key] ?? '').toString().toLowerCase()
+      const bValue = (b[key] ?? '').toString().toLowerCase()
+
+      return currentSort.value.direction
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue)
+    })
+  }
 
   if (arrayName === 'catalog') {
     sortedCatalog.value = sorted
   } else {
     sortedSubcategories.value = sorted
   }
+}
+
+const filteredCategories = computed(() => {
+  if (!searchCategory.value?.trim()) return catalog.value
+
+  if (searchCategory.value.trim()) {
+    return catalog.value.filter(item => item.title.toLowerCase().includes(searchCategory.value.toLowerCase()))
+  }
+})
+
+const filteredSubcategories = computed(() => {
+  if (!searchSubcategory.value?.trim()) return subcategories.value
+
+  if (searchSubcategory.value.trim()) {
+    return subcategories.value.filter(item => item.title.toLowerCase().includes(searchSubcategory.value.toLowerCase()))
+  }
+})
+
+const showModal = ref<string | null>(null)
+
+const toggleModal = (modalName: string, ) => {
+  state.showAdminModal = true
+  showModal.value = showModal.value === modalName ? null : modalName
 }
 
 const showDeleteModal = (index: string) => {
@@ -151,21 +214,18 @@ const showEditModal = (index: string) => {
   state.showAdminModal = true
 }
 
-const getSubcategoryParentTitle = (id: string) => {
-  const category = catalog.value.find(category => category._id === id)
-  const subcategory = subcategories.value.find(category => category._id === id)
-
-  return category ? category.title : subcategory?.title
-}
-
 watch(
     () => state.showAdminModal, () => {
       if (state.showAdminModal === false) {
         deleteIndex.value = null
         editIndex.value = null
       }
-    }
-)
+    })
+
+watch([searchCategory, searchSubcategory], () => {
+  sortedCatalog.value = []
+  sortedSubcategories.value = []
+})
 
 watch(
     () => [store.catalog, store.categories], () => {
@@ -182,15 +242,48 @@ onBeforeRouteLeave(() => {
 </script>
 
 <style scoped lang="scss">
-.edit-button {
-  cursor: pointer;
-}
-.delete-button {
-  cursor: pointer;
-}
-
-.edit-category {
+.admin-page {
   display: flex;
   gap: 20px;
+
+  &-column {
+    min-width: 630px;
+
+    &-header {
+      display: flex;
+      align-items: flex-end;
+      gap: 20px;
+      margin-bottom: 4px;
+    }
+  }
+
+  &-input {
+    &-container {
+      position: relative;
+      max-width: 200px;
+      display: flex;
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    &-delete-icon {
+      position: absolute;
+      right: 32px;
+      cursor: pointer;
+    }
+
+    &-title {
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+  }
+}
+
+.edit-button {
+   cursor: pointer;
+ }
+
+.delete-button {
+  cursor: pointer;
 }
 </style>

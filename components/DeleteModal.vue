@@ -1,12 +1,12 @@
 <template>
   <div class="delete-modal">
     <div class="modal-heading">Deleting entity</div>
-    <div class="delete-modal-text">Are you sure you want to delete <strong>{{ props.category?.title }}</strong>?</div>
+    <div class="delete-modal-text">Are you sure you want to delete <strong>{{ props.entity?.title }}</strong>?</div>
     <Icon name="cross" class="delete-modal-cross" @click="state.showAdminModal = false" />
     <div class="delete-modal-button-container">
       <button
           class="delete-modal-delete-button"
-          @click="deleteCategory(props.category._id)"
+          @click="deleteEntity(props.entity._id)"
           :disabled="state.isClicked"
       >Delete</button>
     </div>
@@ -17,24 +17,41 @@
 import axios from "axios";
 import { useCatalogStore } from "~/stores/catalog"
 import {useStateStore} from "~/stores/state";
+import {useProductStore} from "~/stores/product"
 
-const store = useCatalogStore()
+const product = useProductStore()
+const catalog = useCatalogStore()
 const state = useStateStore()
 
 const props = defineProps({
-  category: {}
+  entity: {}
 })
 
-const deleteCategory = async (id: string) => {
-  try {
-    state.isClicked = true
-    const {data} = await axios.delete(`/api/catalog/${id}`)
-    console.log(data)
-    await store.fetchCatalog()
-    state.isClicked = false
-    state.showAdminModal = false
-  } catch (error) {
-    console.error(error)
+const deleteEntity = async (id: string) => {
+  if (props.entity.parentCategory === undefined) {
+    try {
+      state.isClicked = true
+      const {data} = await axios.delete(`/api/products/${id}`)
+      console.log(data)
+      await product.requestAllProducts()
+      state.isClicked = false
+      state.showAdminModal = false
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  if (props.entity.parentCagegory !== undefined) {
+    try {
+      state.isClicked = true
+      const {data} = await axios.delete(`/api/catalog/${id}`)
+      console.log(data)
+      await catalogStore.fetchCatalog()
+      state.isClicked = false
+      state.showAdminModal = false
+    } catch (error) {
+      console.error(error)
+    }
   }
 }
 </script>

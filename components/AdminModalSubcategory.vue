@@ -27,7 +27,7 @@
 
       <button
           @click="store.editCategory(propsSubcategory.title, propsSubcategory.parentCategory, propsSubcategory._id)"
-          :disabled="propsSubcategory.title === props.category.title && propsSubcategory.parentCategory === props.category.parentCategory"
+          :disabled="propsSubcategory.title === props.category?.title && propsSubcategory.parentCategory === props.category?.parentCategory"
           class="submit"
       >
         Edit subcategory
@@ -35,7 +35,6 @@
 
       <Icon name="cross" class="edit-modal-close" @click="state.showAdminModal = false" />
     </div>
-
     <div v-if="state.instanceCreated" class="success">Subcategory updated successfully!</div>
     <div v-if="state.instanceCreated === false" class="error">Oops! Couldn't update the subcategory.</div>
   </div>
@@ -43,7 +42,6 @@
   <div class="add-page-modal" v-if="state.isAddOrEdit === 'add'">
     <div class="add-page-modal-content">
       <div class="modal-heading">Add Subcategory</div>
-
 
       <p class="label">Title</p>
       <input type="text" v-model="subcategory.title" />
@@ -122,7 +120,6 @@ const groupedCategories = computed(() => {
 
     groupMap.get(parent._id).children.push(category)
   })
-
   return Array.from(groupMap.values())
 })
 </script>

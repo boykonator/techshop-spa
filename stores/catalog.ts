@@ -1,6 +1,6 @@
 import {defineStore} from 'pinia'
 import axios from "axios"
-import type {ICatalogItem, ICategory, IProduct} from "~/types/catalog"
+import type {ICatalogItem, ICategory} from "~/types/catalog"
 import {createCatalogLinks, showSuccessMessage} from "~/utils/index.js"
 
 export const useCatalogStore = defineStore('catalog', () => {
@@ -90,14 +90,11 @@ export const useCatalogStore = defineStore('catalog', () => {
         }
     }
 
-    const product = ref<IProduct | null>(null)
+    const getSubcategoryParentTitle = (id: string) => {
+        const category = catalog.value.find(category => category._id === id)
+        const subcategory = categories.value.find(category => category._id === id)
 
-    const requestProduct = async () => {
-        const route = useRoute()
-        const {data} = await axios.get(`/api/products/${route.params.url}`)
-
-        product.value = data
-        console.log('data: ', product.value)
+        return category ? category.title : subcategory?.title
     }
 
     const breadcrumbs = ref({})
@@ -169,10 +166,10 @@ export const useCatalogStore = defineStore('catalog', () => {
         activeTab,
         breadcrumbs,
         breadcrumbArray,
-        product,
         fetchCatalog,
         createCategory,
         editCategory,
-        createBreadcrumbs
+        createBreadcrumbs,
+        getSubcategoryParentTitle
     }
 })

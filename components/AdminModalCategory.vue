@@ -18,7 +18,7 @@
 
       <button
           @click="store.editCategory(propsCategory.title, propsCategory.parentCategory, propsCategory._id)"
-          :disabled="propsCategory.title === props.category.title && propsCategory.parentCategory === props.category.parentCategory"
+          :disabled="propsCategory.title === props.category?.title && propsCategory.parentCategory === props.category?.parentCategory"
           class="submit"
       >Edit category
       </button>
@@ -27,7 +27,7 @@
     </div>
 
     <div v-if="state.instanceCreated" class="success">Category updated successfully!</div>
-    <div v-if="state.instanceCreated === false" class="error">Something wrong happened..</div>
+    <div v-if="state.instanceCreated === false" class="error">Oops! Couldn't update the category.</div>
   </div>
 
   <div class="add-page-modal" v-if="state.isAddOrEdit === 'add'">
@@ -53,7 +53,6 @@
           class="submit"
       >Create category
       </button>
-
       <Icon name="cross" class="add-page-modal-close" @click="state.showAdminModal = false"/>
     </div>
     <div v-if="state.instanceCreated" class="success">Category created successfully!</div>
