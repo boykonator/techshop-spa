@@ -1,82 +1,77 @@
 <template>
   <div>
-    <Breadcrumbs />
+    <Breadcrumbs/>
 
     <div class="catalog-title">
-      {{ store.breadcrumbArray[store.breadcrumbArray.length - 1]?.title }}
+      {{ currentCategoryTitle }}
       <span v-if="products.length">{{ products.length }} товаров</span>
     </div>
 
-    <div v-if="products.length" class="catalog-content-products">
-      <div
-          v-for="item in products"
-          :key="item.title"
-          class="catalog-content-products-card-container"
-          @click="navigateTo(`/product/${item.url}`)"
-      >
-        <div class="catalog-content-card">
-          <img class="catalog-content-card-image" :src="`/images/${item.title}/1.jpg.webp`" :alt="`/images/${item.title}/`">
-          <div class="catalog-content-card-text">{{ item.title }}</div>
-        </div>
-      </div>
-    </div>
+
+    <ProductsPage v-if="store.breadcrumbs?.subcategory"/>
 
     <div v-else class="catalog-content">
       <div
-          v-for="item in categories"
-          :key="item.title"
+          v-for="category in subcategories"
+          :key="category._id"
           class="catalog-content-card-container"
-          @click="navigateTo(`/catalog/${item.url}`)"
+          @click="navigateTo(`/catalog/${category.url}`)"
       >
         <div class="catalog-content-card">
-          <img class="catalog-content-card-image" :src="`/images/catalog/${item.url}.png`" :alt="item.title" />
-          <div class="catalog-content-card-text">{{ item.title }}</div>
+          <img
+              class="catalog-content-card-image"
+              :src="`/images/catalog/${category.url}.png`"
+              :alt="category.title"
+          />
+          <div class="catalog-content-card-text">{{ category.title }}</div>
         </div>
       </div>
     </div>
   </div>
 </template>
 
-<script setup>
-import axios from "axios";
+<script setup lang="ts">
+import axios from 'axios'
+import {useRoute} from 'vue-router'
+import {useCatalogStore} from '~/stores/catalog'
+import ProductsPage from "~/components/ProductsPage.vue";
 
-import {useRoute} from 'vue-router';
-const route = useRoute();
-
-import {useCatalogStore} from "~/stores/catalog.ts";
-import Breadcrumbs from "~/components/Breadcrumbs.vue";
+const route = useRoute()
 const store = useCatalogStore()
 
-const products = ref([])
-
-const categories = computed(() => {
+const currentCategoryTitle = computed(() => {
   const lastItem = store.breadcrumbArray.at(-1)
-
-  if (!lastItem) return []
-
-  return lastItem.subcategories ?? lastItem.categories ?? []
+  return lastItem?.title ?? ''
 })
 
-const requestProducts = async () => {
-  const _id = store.breadcrumbs?.subcategory?._id;
+const subcategories = computed(() => {
+  const lastItem = store.breadcrumbArray.at(-1)
+  return lastItem?.subcategories ?? lastItem?.categories ?? []
+})
 
-  if (!_id) return;
+const products = ref([])
+const fetchProducts = async () => {
+  const categoryId = store.breadcrumbs?.subcategory?._id
 
-  const {data} = await axios.get('/api/products', {
-    params: {_id}
-  })
+  if (!categoryId) return
 
-  products.value = data
-  console.log('data: ', products.value)
+  try {
+    const {data} = await axios.get('/api/products', {
+      params: {_id: categoryId}
+    })
+    products.value = data
+    console.log('Fetched products:', products.value)
+  } catch (error) {
+    console.error('Error fetching products:', error)
+  }
 }
 
 watch(
     () => store.categoryTree,
-    (newVal) => {
-      if (newVal.length) {
-        store.createBreadcrumbs(route.params.category, false)
-        requestProducts()
-        console.log(store.breadcrumbs)
+    (tree) => {
+      if (tree.length) {
+        store.createBreadcrumbs(route.params.category as string, false)
+        fetchProducts()
       }
     },
     {immediate: true}
@@ -84,7 +79,6 @@ watch(
 </script>
 
 <style scoped lang="scss">
-
 .catalog {
   &-title {
     font-size: 32px;
@@ -165,10 +159,6 @@ watch(
       display: flex;
       flex-direction: column;
       max-height: 10vh;
-
-      &-card {
-
-      }
     }
   }
 

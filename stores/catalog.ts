@@ -2,11 +2,13 @@ import {defineStore} from 'pinia'
 import axios from "axios"
 import type {ICatalogItem, ICategory} from "~/types/catalog"
 import {createCatalogLinks, showSuccessMessage} from "~/utils/index.js"
+import {useProductStore} from "~/stores/product";
 
 export const useCatalogStore = defineStore('catalog', () => {
     const activeTab = ref('bytovaya-tehnika')
     const catalog = ref<ICatalogItem[]>([])
     const categories = ref<ICategory[]>([])
+    const watchlist = ref<ICatalogItem[]>([])
 
     const categoryTree = ref<ICatalogItem[]>([])
 
@@ -56,17 +58,15 @@ export const useCatalogStore = defineStore('catalog', () => {
         categoryTree.value = catalog.value.map(item => map.get(item._id))
     }
 
-    const editCategory = async (title: string, parentCategory: string, _id: string) => {
+    const createCategory = async (title: string, parentCategory: string | null) => {
         try {
             const category = createCatalogLinks(title)
 
-            const { data } = await axios.put(`/api/catalog/${_id}`, {
+            const { data } = await axios.post('/api/catalog', {
                 title: category.title,
                 parentCategory: parentCategory,
                 url: category.url,
             })
-
-            console.log(data)
             showSuccessMessage(data)
             await fetchCatalog()
         } catch (error) {
@@ -74,11 +74,11 @@ export const useCatalogStore = defineStore('catalog', () => {
         }
     }
 
-    const createCategory = async (title: string, parentCategory: string) => {
+    const editCategory = async (title: string, parentCategory: string, _id: string) => {
         try {
             const category = createCatalogLinks(title)
 
-            const { data } = await axios.post('/api/catalog', {
+            const { data } = await axios.put(`/api/catalog/${_id}`, {
                 title: category.title,
                 parentCategory: parentCategory,
                 url: category.url,
@@ -100,13 +100,14 @@ export const useCatalogStore = defineStore('catalog', () => {
     const breadcrumbs = ref({})
 
     const createBreadcrumbs = async (url: string, isProductPage: boolean) => {
+        const store = useProductStore()
         const catalog = {title: 'Каталог', url: ''}
 
-        if (isProductPage) {
-            await requestProduct()
+        if (!categoryTree.value.length) buildCategoryTree()
 
-            const productCategoryId = product.value.category?._id || product.value.category
-            const productParentCategoryId = product.value.category?.parentCategory
+        if (isProductPage) {
+            const productCategoryId = store.product?.category?._id || store.product.category
+            const productParentCategoryId = store.product?.category?.parentCategory
 
             if (!productCategoryId) {
                 console.warn('Product category is missing.')
@@ -119,9 +120,9 @@ export const useCatalogStore = defineStore('catalog', () => {
                     if (category._id === productParentCategoryId) {
                         for (const subcategory of category.subcategories || []) {
                             if (subcategory._id === productCategoryId) {
-                                breadcrumbs.value = {catalog, parent, category, subcategory}
+                                breadcrumbs.value = {catalog, parent, category, subcategory, product: store.product}
 
-                                console.log('breadcrumbs.value', breadcrumbs.value)
+                                console.log('breadcrumbs.value: ', breadcrumbs.value)
                                 return
                             }
                         }
@@ -157,6 +158,7 @@ export const useCatalogStore = defineStore('catalog', () => {
         breadcrumbs.value?.parent,
         breadcrumbs.value?.category,
         breadcrumbs.value?.subcategory,
+        breadcrumbs.value?.product,
     ].filter(Boolean))
 
     return {
@@ -167,9 +169,10 @@ export const useCatalogStore = defineStore('catalog', () => {
         breadcrumbs,
         breadcrumbArray,
         fetchCatalog,
-        createCategory,
-        editCategory,
         createBreadcrumbs,
-        getSubcategoryParentTitle
+        getSubcategoryParentTitle,
+        editCategory,
+        createCategory,
+        watchlist
     }
 })

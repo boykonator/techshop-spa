@@ -9,11 +9,8 @@
 import { useCatalogStore } from "~/stores/catalog"
 const store = useCatalogStore()
 
-// import { useUserStore } from '~/stores/user'
-// const userStore = useUserStore()
-
-onMounted(() => {
-  store.fetchCatalog()
+onMounted(async () => {
+  await store.fetchCatalog()
 })
 </script>
 

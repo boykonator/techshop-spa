@@ -2,66 +2,120 @@
   <div class="wishlist">
     <div class="wishlist-title">Избранное</div>
 
-    <div v-if="showWarning" class="wishlist-warning" >
+    <div v-if="isWarningVisible" class="wishlist-warning">
       <span class="wishlist-warning-icon">
-        <Icon name="exclamation-mark" />
+        <Icon name="exclamation-mark"/>
       </span>
       <p class="wishlist-warning-text">
-        Если вы не авторизуетесь, список будет удален {{ getDateInAWeek() }}.
+        Если вы не авторизуетесь, список будет удален {{ getDateInAWeek }}.
         Чтобы сохранить список и иметь к нему доступ с различных устройств, войдите в
         <a href="" @click.prevent="toggleLoginModal">личный кабинет</a>
       </p>
-      <div class="wishlist-warning-close" @click="showWarning = false">
-        <Icon name="cross" size="24" />
+      <div class="wishlist-warning-close" @click="dismissedWarning = true">
+        <Icon name="cross" size="24"/>
       </div>
     </div>
-    <!--    !wishlistContent.length-->
-    <div class="wishlist-content" v-if="true">
+
+    <div class="wishlist-content-empty" v-if="!userStore.user?.wishlist?.length">
       <div class="wishlist-content-image"></div>
       <div class="wishlist-content-description">В списке пока нет ни одного избранного товара</div>
       <button class="wishlist-content-button" @click="navigateTo('/catalog')">Перейти в каталог</button>
     </div>
-    <div v-else>
-      <div class="wishlist-content-image">
+
+    <div v-else class="wishlist-content">
+      <div class="wishlist-content-info">
+        <div class="wishlist-content-info-heading">
+          {{ products?.length }} {{ productsWordEnding }} на сумму: ${{ wishlistSum }}
+        </div>
+
+        <div class="wishlist-content-info-content">
+          <div class="wishlist-content-info-select-all" @click="selectAllHandler">
+            <input type="checkbox" :checked="isSelectAll">
+            <span>Выбрать все</span>
+          </div>
+          <button @click="">Купить</button>
+        </div>
       </div>
+      <ProductCard
+          v-for="product in products"
+          :key="product._id"
+          :product="product"
+          v-model:selected="selectedProducts[product._id]"
+          class="wishlist-content-product"
+      />
     </div>
   </div>
 </template>
 
-<script setup>
-import { useUserStore } from '~/stores/user'
-const store = useUserStore();
+<script setup lang="ts">
+import axios from 'axios'
+import {useUserStore} from '~/stores/user'
 
-const showWarning = ref(false)
+const userStore = useUserStore()
 
-const isWarningShown = () => {
-  showWarning.value = !!(!store.user && wishlistContent.value.length)
+const products = ref([])
+const selectedProducts = reactive({})
+
+const isSelectAll = computed(() => {
+  return products.value.length && products.value.every(product => selectedProducts[product._id])
+})
+
+const selectAllHandler = (event) => {
+  const checked = event?.target?.checked ?? !isSelectAll.value
+  products.value.forEach(product => {
+    selectedProducts[product._id] = checked
+  })
 }
 
-const wishlistContent = ref([{}])
+const wishlistSum = computed(() => {
+  return products.value.reduce((acc, cur) => acc + cur.price, 0).toLocaleString('ru-RU');
+})
+
+const productsWordEnding = computed(() => {
+  return products?.length === 1 ? 'товар' : products?.length > 1 && products?.length < 5 ? 'товара' : 'товаров'
+})
+
+const fetchProducts = async () => {
+  if (!userStore.user || !userStore.user.wishlist?.length) return
+  try {
+    const ids = userStore.user.wishlist.map(item => item).join(',')
+    const {data} = await axios.get('/api/products', {
+      params: {
+        ids
+      }
+    })
+    products.value = data
+  } catch (error) {
+    console.error('Failed to load wishlist products:', error)
+  }
+}
+
+const dismissedWarning = ref(false)
+
+const isWarningVisible = computed(() => {
+  return !dismissedWarning.value && !userStore.user
+})
 
 const toggleLoginModal = () => {
-  store.showLoginModal = !store.showLoginModal
+  userStore.showLoginModal = !userStore.showLoginModal
 }
 
-const getDateInAWeek = () => {
+const getDateInAWeek = computed(() => {
   const date = new Date()
   date.setDate(date.getDate() + 7)
 
-  const day = String(date.getDate()).padStart(2, "0")
-  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
   const year = String(date.getFullYear()).slice(-2)
 
   return `${day}.${month}.${year}`
-}
-
-onMounted(() => {
-  isWarningShown()
 })
 
-watch(() => store.user, () => {
-  isWarningShown()
-}, )
+onMounted(fetchProducts)
+
+watch(() => [userStore.isAuthenticated, userStore.user], () => {
+  fetchProducts()
+})
 </script>
 
 <style scoped lang="scss">
@@ -73,17 +127,68 @@ watch(() => store.user, () => {
   }
 
   &-content {
-    background: #fff;
-    box-shadow: 0 2px 4px -2px $dark-gray;
-    height: 50vh;
+    height: 100%;
     width: 100%;
     font-size: 14px;
     border-radius: 8px;
     position: relative;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    align-items: flex-start;
+    gap: 12px;
+
+    &-empty {
+      background: #fff;
+      box-shadow: 0 2px 4px -2px $dark-gray;
+      height: 50vh;
+      width: 100%;
+      font-size: 14px;
+      border-radius: 8px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    &-info {
+      background: #fff;
+      box-shadow: 0 2px 4px -2px $dark-gray;
+      height: 100%;
+      width: 100%;
+      padding: 16px;
+      margin: 5px 0 25px;
+      border-radius: 8px;
+      position: relative;
+      box-sizing: border-box;
+
+      &-content {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        box-sizing: border-box;
+      }
+
+      &-heading {
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 16px;
+      }
+
+      &-select-all {
+        padding: 10px;
+        border: 1px solid $mid-gray;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+
+        &:hover {
+          background: $light-gray;
+        }
+      }
+    }
 
     &-image {
       height: 200px;

@@ -1,6 +1,7 @@
 <template>
   <div>
-    <div v-if="isFocusedInput || isFocusedCatalog || state.showLoginModal || state.showAdminModal" class="focus" @click.self="toggleFocus"/>
+    <div v-if="isFocusedInput || isFocusedCatalog || state.showLoginModal || state.showAdminModal" class="focus"
+         @click.self="toggleFocus"/>
 
     <nav>
       <div class="header">
@@ -17,10 +18,24 @@
               class="header-link"
               @click="navigateTo(`/${item.url}`)"
           >
-            <div class="header-link-icon">
-              <Icon :name="item.icon"/>
+            <div class="header-link-inner">
+              <div class="header-link-icon">
+                <Icon :name="item.icon" class="header-link-icon-color" />
+              </div>
+              <span
+                  :class="[
+                    'header-link-text',
+                    item.url === 'cart' && item.name !== 'Корзина' ? 'header-link-text-bold' : ''
+                  ]"
+              >
+                {{ item.name }}
+              </span>
             </div>
-            {{ item.name }}
+
+            <span
+                v-if="item.url === 'cart'"
+                class="header-link-cart-count"
+            >{{ store.user?.cart.length }}</span>
           </div>
 
           <div
@@ -29,12 +44,13 @@
               @mouseenter="showHeaderLogin = true"
               @mouseleave="showHeaderLogin = false"
           >
-            <div class="header-link-icon">
-              <Icon name="user"/>
+            <div class="header-link-inner">
+              <div class="header-link-icon">
+                <Icon name="user" />
+              </div>
+              <span class="header-link-text">Войти</span>
             </div>
-            Войти {{ store.user }}
-
-            <HeaderLogin v-show="showHeaderLogin"/>
+            <HeaderLogin v-show="showHeaderLogin" />
           </div>
 
           <div
@@ -42,10 +58,12 @@
               class="header-link"
               @click="navigateTo('/profile')"
           >
-            <div class="header-link-icon">
-              <Icon name="user"/>
+            <div class="header-link-inner">
+              <div class="header-link-icon">
+                <Icon name="user" />
+              </div>
+              <span class="header-link-text">Профиль</span>
             </div>
-            Профиль
           </div>
         </div>
       </div>
@@ -55,19 +73,39 @@
 
 <script setup lang="ts">
 import {useUserStore} from "~/stores/user";
-const store = useUserStore()
-
 import {useStateStore} from "~/stores/state";
+import axios from "axios";
+
+const store = useUserStore()
 const state = useStateStore()
 
 const showHeaderLogin = ref(false)
 const isFocusedInput = ref(false)
 const isFocusedCatalog = ref(false)
 
-const menu: { name: string, url: string, icon: string }[] = [
-  {name: 'Избранное', url: 'wishlist', icon: 'favorite'},
-  {name: 'Корзина', url: 'cart', icon: 'cart'},
-]
+const cartName = ref('Корзина')
+
+const fetchCartProducts = async () => {
+  if (!store.user?.cart.length) return
+
+  try {
+    const ids = store.user.cart.join(',')
+    const { data } = await axios.get('/api/products', {
+      params: { ids }
+    })
+
+    cartName.value = '$' + data.reduce((acc, cur) => acc + cur.price, 0).toLocaleString('ru-RU')
+  } catch (error) {
+    console.error('Failed to load cart products:', error)
+  }
+}
+
+const menu: { name: string, url: string, icon: string }[] = computed(() => {
+  return [
+    {name: 'Избранное', url: 'wishlist', icon: 'favorite'},
+    {name: cartName.value, url: 'cart', icon: 'cart'},
+  ]
+})
 
 const toggleFocus = () => {
   if (isFocusedInput.value) isFocusedInput.value = false;
@@ -75,6 +113,12 @@ const toggleFocus = () => {
   if (state.showLoginModal) state.showLoginModal = false;
   if (state.showAdminModal) state.showAdminModal = false;
 }
+
+watchEffect(() => {
+  if (store.user) {
+    fetchCartProducts()
+  }
+})
 </script>
 
 <style scoped lang="scss">
@@ -111,6 +155,7 @@ const toggleFocus = () => {
     flex-direction: column;
     align-items: center;
     padding: 0 12px;
+    position: relative;
 
     &:hover {
       background-color: $light-gray;
@@ -129,8 +174,49 @@ const toggleFocus = () => {
       height: 100%;
     }
 
+    &-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 48px;
+    }
+
+    &-icon-color {
+      color: $dark-gray;
+      fill: none;
+    }
+
+    &-cart-count {
+      position: absolute;
+      top: 8px;
+      right: 20px;
+      border: 2px solid #fff;
+      border-radius: 100px;
+      background: $secondary-color;
+      color: #ffffff;
+      padding: 0 4px;
+      font-size: 12px;
+    }
+
+    &-text {
+      margin-top: 4px;
+      line-height: 1;
+      white-space: nowrap;
+
+      &-bold {
+        font-weight: bold;
+      }
+    }
+
     &-icon {
       color: $dark-gray;
+      fill: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 24px;
+      width: 24px;
     }
   }
 }

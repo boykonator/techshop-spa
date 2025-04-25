@@ -18,7 +18,7 @@
           </div>
 
           <div>
-            <button @click="toggleModal('category')">Add Category</button>
+            <button @click="state.openModal('add'); showModal = 'category'">Add Category</button>
             <AdminModalCategory v-if="state.showAdminModal && showModal === 'category'" />
           </div>
         </div>
@@ -46,14 +46,15 @@
               <td>
                 {{ category._id }}
               </td>
-              <td class="edit-button" @click="showEditModal(category._id)">
+              <td class="edit-button" @click="state.openModal('edit', category._id)">
                 <Icon name="edit" />
               </td>
-              <td class="delete-button" @click="showDeleteModal(category._id)">
+              <td class="delete-button" @click="state.openModal('delete', category._id)">
                 <Icon name="cross" />
               </td>
-              <AdminModalCategory v-if="state.showAdminModal && editIndex === category._id" :category="category" />
-              <DeleteModal v-if="state.showAdminModal && deleteIndex === category._id" :entity="category" />
+
+              <AdminModalCategory v-if="state.showAdminModal && state.editIndex === category._id" :category="category" />
+              <DeleteModal v-if="state.showAdminModal && state.deleteIndex === category._id" :entity="category" />
             </tr>
             </tbody>
           </table>
@@ -73,7 +74,7 @@
           </div>
 
           <div>
-            <button @click="toggleModal('subcategory')">Add Subcategory</button>
+            <button @click="state.openModal('add'); showModal = 'subcategory'">Add Subcategory</button>
             <AdminModalSubcategory v-if="state.showAdminModal && showModal === 'subcategory'" />
           </div>
         </div>
@@ -101,14 +102,14 @@
               <td>
                 {{ category._id }}
               </td>
-              <td class="edit-button" @click="showEditModal(category._id)">
+              <td class="edit-button" @click="state.openModal('edit', category._id)">
                 <Icon name="edit" />
               </td>
-              <td class="delete-button" @click="showDeleteModal(category._id)">
+              <td class="delete-button" @click="state.openModal('delete', category._id)">
                 <Icon name="cross" />
               </td>
-              <AdminModalSubcategory v-if="state.showAdminModal && editIndex === category._id" :category="category" />
-              <DeleteModal v-if="state.showAdminModal && deleteIndex === category._id" :entity="category" />
+              <AdminModalSubcategory v-if="state.showAdminModal && state.editIndex === category._id" :category="category" />
+              <DeleteModal v-if="state.showAdminModal && state.deleteIndex === category._id" :entity="category" />
             </tr>
             </tbody>
           </table>
@@ -131,14 +132,13 @@ const categoriesMenu = ['#','title', 'parentCategory', '_id']
 const catalog = computed(() => store.catalog)
 const subcategories = computed(() => store.categories)
 
-const deleteIndex = ref<string | null>(null)
-const editIndex = ref<string | null>(null)
-
 const searchCategory = ref<string | null>(null)
 const searchSubcategory = ref<string | null>(null)
 
 const sortedCatalog = ref<Array<ICatalogItem | ICategory>>([])
 const sortedSubcategories = ref<Array<ICatalogItem | ICategory>>([])
+
+const showModal = ref<string | null>(null)
 
 const currentSort = ref({
   arrayName: '',
@@ -197,28 +197,12 @@ const filteredSubcategories = computed(() => {
   }
 })
 
-const showModal = ref<string | null>(null)
-
-const toggleModal = (modalName: string, ) => {
-  state.showAdminModal = true
-  showModal.value = showModal.value === modalName ? null : modalName
-}
-
-const showDeleteModal = (index: string) => {
-  deleteIndex.value = index
-  state.showAdminModal = true
-}
-
-const showEditModal = (index: string) => {
-  editIndex.value = index
-  state.showAdminModal = true
-}
-
 watch(
     () => state.showAdminModal, () => {
       if (state.showAdminModal === false) {
-        deleteIndex.value = null
-        editIndex.value = null
+        state.deleteIndex = null
+        state.editIndex = null
+        showModal.value = null
       }
     })
 

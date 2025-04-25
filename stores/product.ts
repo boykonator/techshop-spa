@@ -8,7 +8,7 @@ export const useProductStore = defineStore('product', () => {
 
     const requestProduct = async () => {
         const route = useRoute()
-        const {data} = await axios.get(`/api/products/${route.params.url}`)
+        const {data} = await axios.get(`/api/products/by-url/${route.params.url}`);
 
         product.value = data
         console.log('data: ', product.value)
@@ -16,9 +16,7 @@ export const useProductStore = defineStore('product', () => {
 
     const requestAllProducts = async () => {
         const {data} = await axios.get(`/api/products/`)
-
         products.value = data
-        console.log('data: ', products.value)
     }
 
     return {

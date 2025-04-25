@@ -46,7 +46,7 @@ const toggleInput = (value) => {
 
 <style scoped lang="scss">
 .header-input {
-  width: 40vw;
+  width: 38vw;
   height: 100%;
   padding: 0 120px 0 28px;
   font-size: 16px;

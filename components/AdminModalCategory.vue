@@ -1,5 +1,5 @@
 <template v-if="state.showAdminModal && state.isAddOrEdit">
-  <div class="edit-modal" v-if="state.isAddOrEdit === 'edit' && state.showAdminModal">
+  <div class="edit-modal" v-if="state.isAddOrEdit === 'edit'">
     <div class="edit-modal-content">
       <div class="modal-heading">Edit Category</div>
 
@@ -60,7 +60,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {useCatalogStore} from "~/stores/catalog"
 import {useStateStore} from "~/stores/state";
 

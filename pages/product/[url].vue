@@ -10,23 +10,19 @@
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
-const route = useRoute();
-
 import { useCatalogStore } from "~/stores/catalog"
-import axios from "axios";
-const store = useCatalogStore()
+import {useProductStore} from "~/stores/product"
 
-const product = ref({})
+const route = useRoute()
+const store = useProductStore()
+const catalog = useCatalogStore()
 
+onBeforeMount(async () => {
+  if (!catalog.categoryTree.length) {
+    await catalog.fetchCatalog()
+  }
 
-const requestProduct = async () => {
-  const {data} = await axios.get(`/api/products/${route.params.url}`)
-
-  product.value = data
-  console.log('data: ', product.value)
-}
-
-requestProduct()
-
-store.createBreadcrumbs(route.params.category, true)
+  await store.requestProduct()
+  await catalog.createBreadcrumbs(route.params.url, true)
+})
 </script>

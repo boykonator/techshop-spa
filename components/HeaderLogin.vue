@@ -37,12 +37,12 @@ const toggleLoginModal = () => {
   padding: 28px 20px;
   position: relative;
 
-
   &-container {
     position: absolute;
     top: 0;
     right: 0;
     z-index: 1;
+    min-width: 212px;
   }
 
   &-title {
@@ -55,13 +55,16 @@ const toggleLoginModal = () => {
     width: 100%;
   }
 
-
   &-menu {
     margin: 24px 0 12px 0;
 
     &-item {
       line-height: 20px;
       margin-bottom: 8px;
+
+      &:hover {
+        color: $secondary-color;
+      }
     }
   }
 }

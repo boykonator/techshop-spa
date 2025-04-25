@@ -2,18 +2,22 @@ import mongoose from 'mongoose'
 
 export default defineEventHandler(async (event) => {
     const query = getQuery(event)
-    const _id = query._id
 
-    if (!_id) {
-        // If no _id provided, return all products
-        const products = await Product.find()
+    if (query.ids) {
+        const idsArray = (query.ids as string).split(',').filter(id => mongoose.Types.ObjectId.isValid(id))
+        const products = await Product.find({ _id: { $in: idsArray } })
         return products
     }
 
-    if (!mongoose.Types.ObjectId.isValid(_id)) {
-        return { error: 'Invalid category ID: ' + _id }
+    if (query._id) {
+        const categoryId = query._id
+        if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+            return { error: 'Invalid category ID: ' + categoryId }
+        }
+        const products = await Product.find({ category: categoryId })
+        return products
     }
 
-    const products = await Product.find({ category: _id })
+    const products = await Product.find()
     return products
 })

@@ -19,7 +19,7 @@
         </div>
 
         <div>
-          <button @click="openModal('add')">Add Product</button>
+          <button @click="state.openModal('add')">Add Product</button>
           <AdminModalProduct v-if="state.showAdminModal" />
         </div>
       </div>
@@ -56,14 +56,14 @@
             <td>
               {{ product._id }}
             </td>
-            <td class="edit-button" @click="openModal('edit', product._id)">
+            <td class="edit-button" @click="state.openModal('edit', product._id)">
               <Icon name="edit" />
             </td>
-            <td class="delete-button" @click="openModal('delete', product._id)">
+            <td class="delete-button" @click="state.openModal('delete', product._id)">
               <Icon name="cross" />
             </td>
-            <AdminModalProduct v-if="state.showAdminModal && editIndex === product._id" :product="product" />
-            <DeleteModal v-if="state.showAdminModal && deleteIndex === product._id" :entity="product" />
+            <AdminModalProduct v-if="state.showAdminModal && state.editIndex === product._id" :product="product" />
+            <DeleteModal v-if="state.showAdminModal && state.deleteIndex === product._id" :entity="product" />
           </tr>
           </tbody>
         </table>
@@ -85,9 +85,6 @@ const productMenu = ['#','title', 'description', 'category', 'price', 'stock', '
 
 const products = computed(() => store.products)
 
-const deleteIndex = ref<string | null>(null)
-const editIndex = ref<string | null>(null)
-
 const searchProduct = ref<string | null>(null)
 
 const filteredProducts = computed(() => {
@@ -98,23 +95,13 @@ const filteredProducts = computed(() => {
   }
 })
 
-const openModal = (type: 'add' | 'edit' | 'delete', index: string | null = null) => {
-  state.showAdminModal = true
-  state.isAddOrEdit = type === 'edit' ? 'edit' : type === 'add' ? 'add' : null
-
-  editIndex.value = type === 'edit' ? index : null
-  deleteIndex.value = type === 'delete' ? index : null
-}
-
-onMounted(() => {
-  store.requestAllProducts()
-})
+onMounted(store.requestAllProducts())
 
 watch(
     () => state.showAdminModal, () => {
       if (state.showAdminModal === false) {
-        deleteIndex.value = null
-        editIndex.value = null
+        state.deleteIndex = null
+        state.editIndex = null
       }
     }
 )

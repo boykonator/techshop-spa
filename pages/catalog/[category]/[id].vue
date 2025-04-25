@@ -1,14 +1,12 @@
 <template>
-  <div>
-
-  </div>
+  <div></div>
 </template>
 
 <script setup lang="ts">
-import { useRoute } from 'vue-router';
-const route = useRoute();
+import { useRoute } from 'vue-router'
+const route = useRoute()
 
 onMounted(() => {
-  navigateTo(`/catalog/${route.params.category}`);
+  navigateTo(`/catalog/${route.params.category}`)
 })
 </script>

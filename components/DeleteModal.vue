@@ -41,12 +41,12 @@ const deleteEntity = async (id: string) => {
     }
   }
 
-  if (props.entity.parentCagegory !== undefined) {
+  if (props.entity.parentCategory !== undefined) {
     try {
       state.isClicked = true
       const {data} = await axios.delete(`/api/catalog/${id}`)
       console.log(data)
-      await catalogStore.fetchCatalog()
+      await catalog.fetchCatalog()
       state.isClicked = false
       state.showAdminModal = false
     } catch (error) {
