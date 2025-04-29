@@ -12,13 +12,16 @@ export const useUserStore = defineStore('user', () => {
         user.value = null;
     }
 
-    const isAuthenticated = computed(() => !!user.value);
+    const isAuthenticated = computed(() => !!user.value)
+
+    const tempWishlist = ref<string[]>([])
 
     return {
         user,
         isAuthenticated,
         setUser,
-        logout
+        logout,
+        tempWishlist
     }
     }, {
     persist: true

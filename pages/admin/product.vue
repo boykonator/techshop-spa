@@ -95,7 +95,7 @@ const filteredProducts = computed(() => {
   }
 })
 
-onMounted(store.requestAllProducts())
+onMounted(store.requestAllProducts)
 
 watch(
     () => state.showAdminModal, () => {

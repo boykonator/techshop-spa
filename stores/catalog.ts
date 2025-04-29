@@ -2,7 +2,7 @@ import {defineStore} from 'pinia'
 import axios from "axios"
 import type {ICatalogItem, ICategory} from "~/types/catalog"
 import {createCatalogLinks, showSuccessMessage} from "~/utils/index.js"
-import {useProductStore} from "~/stores/product";
+import {useProductStore} from "~/stores/product"
 
 export const useCatalogStore = defineStore('catalog', () => {
     const activeTab = ref('bytovaya-tehnika')

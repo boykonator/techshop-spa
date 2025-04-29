@@ -3,7 +3,7 @@
     <div class="header-login">
       <div class="header-login-title">Получайте бонусы, сохраняйте и отслеживайте заказы</div>
 
-      <button @click="toggleLoginModal" class="header-login-button">Войти</button>
+      <button @click="state.toggleLoginModal" class="header-login-button">Войти</button>
 
       <div class="header-login-menu">
         <div v-for="item of menu" :key="item.url" class="header-login-menu-item" @click="navigateTo(`/${item.url}`)">
@@ -23,10 +23,6 @@ const menu = [
   {title: 'Обратная связь', url: 'feedback'},
   {title: 'Обмен, возврат, гарантия', url: 'service-center'},
 ]
-
-const toggleLoginModal = () => {
-  state.showLoginModal = !state.showLoginModal
-}
 </script>
 
 <style scoped lang="scss">
@@ -41,7 +37,7 @@ const toggleLoginModal = () => {
     position: absolute;
     top: 0;
     right: 0;
-    z-index: 1;
+    z-index: 3;
     min-width: 212px;
   }
 

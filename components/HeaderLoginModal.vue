@@ -115,6 +115,7 @@ const requestUser = async () => {
       } else {
         userData.value = data.user
         userStore.user = data.user
+        userStore.tempWishlist = []
         console.log(userData.value)
       }
     } catch (error) {
@@ -166,7 +167,9 @@ watch(loginState, () => {
   passwordState.value = true
 })
 
-watch(() => state.showLoginModal, () => {
+watch(() => state.showLoginModal, (opened) => {
+  document.body.style.overflow = opened ? 'hidden' : ''
+
   loginState.value = "code"
   showCaption.value = false
   passwordState.value = true
@@ -176,9 +179,10 @@ watch(() => state.showLoginModal, () => {
 <style scoped lang="scss">
 .header-login-modal {
   &-container {
-    position: absolute;
-    top: 212px;
-    left: calc(50% - 160px);
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     background: white;
     padding: 16px 20px 20px;
     border-radius: 12px;

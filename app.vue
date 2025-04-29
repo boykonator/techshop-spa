@@ -53,7 +53,7 @@ a {
 .container {
   padding: 24px 144px;
   background-color: $light-gray;
-  min-height: 70vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
 

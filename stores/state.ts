@@ -19,15 +19,20 @@ export const useStateStore = defineStore('state', () => {
         deleteIndex.value = type === 'delete' ? index : null
     }
 
+    const toggleLoginModal = () => {
+        showLoginModal.value = !showLoginModal.value
+    }
+
     return {
         showLoginModal,
         showAdminModal,
         instanceCreated,
         isClicked,
         isAddOrEdit,
-        openModal,
         deleteIndex,
-        editIndex
+        editIndex,
+        openModal,
+        toggleLoginModal
     }
 })
 

@@ -1,10 +1,14 @@
 <template>
   <div
       class="catalog-content-card-container"
-      @mouseenter="isHovered = true"
-      @mouseleave="isHovered = false"
+      @mouseenter="onMouseEnter"
+      @mouseleave="onMouseLeave"
   >
-    <div class="catalog-content-card">
+    <div :class="['catalog-content-card', { 'sold-out-active': isSoldOut }]">
+      <div v-if="isSoldOut" class="sold-out">
+        <div class="sold-out-text">Нет в наличии</div>
+      </div>
+
       <input
           type="checkbox"
           v-if="route.path === '/wishlist'"
@@ -38,8 +42,8 @@
           </div>
 
           <div>
-            <span>В наличии <a href="">в 5 магазинах</a></span>
-            <span> Пункты выдачи <a href="">доступны</a></span>
+            <span>В наличии <a href="#">в 5 магазинах</a></span>
+            <span> Пункты выдачи <a href="#">доступны</a></span>
           </div>
         </div>
       </div>
@@ -78,13 +82,13 @@
           <button
               v-if="!isInCart"
               @click="addToCart"
-              :class="isHovered ? 'hovered-button' : 'catalog-buy-button'"
+              :class="isHovered && !isSoldOut ? 'hovered-button' : 'catalog-buy-button'"
           >
             Купить
           </button>
 
           <button
-              v-else
+              v-else-if="isInCart"
               @click="navigateTo('/cart')"
               :class="isButtonHovered ? 'hovered-button' : 'in-cart'"
               @mouseenter="isButtonHovered = true"
@@ -99,58 +103,48 @@
 </template>
 
 <script setup lang="ts">
-import axios from 'axios'
+import type {IProduct} from "~/types/catalog"
 import { useUserStore } from '~/stores/user'
-import { useRoute } from 'vue-router'
+import { useStateStore } from '~/stores/state'
+import { useRoute, useRouter } from 'vue-router'
+import {useProductStore} from "~/stores/product"
 
+const productStore = useProductStore()
+const state = useStateStore()
 const userStore = useUserStore()
 const route = useRoute()
+const router = useRouter()
 
-const props = defineProps({
-  product: Object,
-  selected: Boolean,
-})
+const props = defineProps<{
+  product: IProduct
+  selected?: boolean
+}>()
 
 const emit = defineEmits(['update:selected'])
-
-const onCheckboxChange = (value) => {
-  emit('update:selected', value)
-}
 
 const isHovered = ref(false)
 const isButtonHovered = ref(false)
 const favoriteHovered = ref(false)
 
+const onMouseEnter = () => (isHovered.value = true)
+const onMouseLeave = () => (isHovered.value = false)
+
+const onCheckboxChange = (value: boolean) => {
+  emit('update:selected', value)
+}
+
+const isSoldOut = computed(() => !props.product.stock)
 
 const isInWishlist = computed(() => {
-  return userStore.user?.wishlist?.includes(props.product._id)
+  return userStore.user?.wishlist?.includes(props.product._id) || userStore.tempWishlist.includes(props.product._id)
 })
 
 const isInCart = computed(() => {
   return userStore.user?.cart?.includes(props.product._id)
 })
 
-const updateList = async (type: 'wishlist' | 'cart', add: boolean) => {
-  if (!userStore.user?._id || !props.product._id) return
-
-  try {
-    const method = add ? 'post' : 'delete'
-    const url = `/api/users/${userStore.user._id}/${type}`
-
-    const { data } = await axios({
-      method,
-      url,
-      data: { productId: props.product._id }
-    })
-
-    userStore.user = data.user
-  } catch (err) {
-    console.error(`Error updating ${type}:`, err)
-  }
-}
-
-const toggleFavorite = () => updateList('wishlist', !isInWishlist.value)
-const addToCart = () => updateList('cart', !isInCart.value)
+const toggleFavorite = () => productStore.updateList('wishlist', !isInWishlist.value, props.product)
+const addToCart = () => productStore.updateList('cart', !isInCart.value, props.product)
 </script>
 
 <style scoped lang="scss">
@@ -352,6 +346,43 @@ const addToCart = () => updateList('cart', !isInCart.value)
 
   &:hover {
     background: $light-gray;
+  }
+}
+
+.sold-out {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background: rgba($dark-gray, 0.6);
+  border-radius: 12px;
+  z-index: 2;
+
+  &-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    width: 100%;
+    height: 28px;
+    background: rgba($dark-gray, 0.8);
+    font-size: 16px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.sold-out-active {
+  pointer-events: none;
+  box-shadow: none;
+  transition: opacity 0.3s ease;
+
+  &:hover {
+    box-shadow: none;
   }
 }
 </style>

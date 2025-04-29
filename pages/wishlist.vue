@@ -4,19 +4,19 @@
 
     <div v-if="isWarningVisible" class="wishlist-warning">
       <span class="wishlist-warning-icon">
-        <Icon name="exclamation-mark"/>
+        <Icon name="exclamation-mark" />
       </span>
       <p class="wishlist-warning-text">
         Если вы не авторизуетесь, список будет удален {{ getDateInAWeek }}.
         Чтобы сохранить список и иметь к нему доступ с различных устройств, войдите в
-        <a href="" @click.prevent="toggleLoginModal">личный кабинет</a>
+        <a href="" @click.prevent="state.toggleLoginModal">личный кабинет</a>
       </p>
       <div class="wishlist-warning-close" @click="dismissedWarning = true">
         <Icon name="cross" size="24"/>
       </div>
     </div>
 
-    <div class="wishlist-content-empty" v-if="!userStore.user?.wishlist?.length">
+    <div class="wishlist-content-empty" v-if="!userStore.user?.wishlist?.length && !userStore.tempWishlist?.length">
       <div class="wishlist-content-image"></div>
       <div class="wishlist-content-description">В списке пока нет ни одного избранного товара</div>
       <button class="wishlist-content-button" @click="navigateTo('/catalog')">Перейти в каталог</button>
@@ -33,7 +33,7 @@
             <input type="checkbox" :checked="isSelectAll">
             <span>Выбрать все</span>
           </div>
-          <button @click="">Купить</button>
+          <button @click="productStore.updateList('cart', true)">Купить</button>
         </div>
       </div>
       <ProductCard
@@ -50,7 +50,11 @@
 <script setup lang="ts">
 import axios from 'axios'
 import {useUserStore} from '~/stores/user'
+import {useStateStore} from "~/stores/state"
+import {useProductStore} from "~/stores/product"
 
+const productStore = useProductStore()
+const state = useStateStore()
 const userStore = useUserStore()
 
 const products = ref([])
@@ -72,13 +76,12 @@ const wishlistSum = computed(() => {
 })
 
 const productsWordEnding = computed(() => {
-  return products?.length === 1 ? 'товар' : products?.length > 1 && products?.length < 5 ? 'товара' : 'товаров'
+  return products.value?.length === 1 ? 'товар' : products.value?.length > 1 && products.value?.length < 5 ? 'товара' : 'товаров'
 })
 
 const fetchProducts = async () => {
-  if (!userStore.user || !userStore.user.wishlist?.length) return
   try {
-    const ids = userStore.user.wishlist.map(item => item).join(',')
+    const ids = userStore.user?.wishlist.length ? userStore.user?.wishlist.map(item => item).join(',') : userStore.tempWishlist.map(item => item).join(',')
     const {data} = await axios.get('/api/products', {
       params: {
         ids
@@ -95,10 +98,6 @@ const dismissedWarning = ref(false)
 const isWarningVisible = computed(() => {
   return !dismissedWarning.value && !userStore.user
 })
-
-const toggleLoginModal = () => {
-  userStore.showLoginModal = !userStore.showLoginModal
-}
 
 const getDateInAWeek = computed(() => {
   const date = new Date()
