@@ -1,15 +1,17 @@
 <template>
   <div>
-    <div v-if="isFocusedInput || isFocusedCatalog || state.showLoginModal || state.showAdminModal" class="focus"
-         @click.self="toggleFocus"/>
+    <div v-if="isFocusedInput || isFocusedCatalog || state.showLoginModal || state.showAdminModal"
+         class="focus"
+         @click.self="toggleFocus"
+    />
 
     <nav>
       <div class="header">
         <div style="cursor: pointer" @click="navigateTo('/admin')">admin</div>
 
-        <HeaderCatalog v-model:isFocused="isFocusedCatalog" :style="{ zIndex: isFocusedCatalog ? 9 : 1 }"/>
-        <HeaderInput v-model:isFocused="isFocusedInput" :style="{ zIndex: isFocusedInput ? 9 : 1 }"/>
-        <HeaderLoginModal v-show="state.showLoginModal"/>
+        <HeaderCatalog v-model:isFocused="isFocusedCatalog" :style="{ zIndex: isFocusedCatalog ? 9 : 1 }" />
+        <HeaderInput v-model:isFocused="isFocusedInput" :style="{ zIndex: isFocusedInput ? 9 : 1 }" />
+        <HeaderLoginModal v-show="state.showLoginModal" />
 
         <div class="header-link-container">
           <div
@@ -24,18 +26,20 @@
               </div>
               <span
                   :class="[
-                    'header-link-text',
-                    item.url === 'cart' && item.name !== 'Корзина' ? 'header-link-text-bold' : ''
-                  ]"
+                  'header-link-text',
+                  item.url === 'cart' && item.name !== 'Корзина' ? 'header-link-text-bold' : ''
+                ]"
               >
                 {{ item.name }}
               </span>
             </div>
 
             <span
-                v-if="item.url === 'cart'"
+                v-if="item.url === 'cart' && store.user?.cart.length"
                 class="header-link-cart-count"
-            >{{ store.user?.cart.length }}</span>
+            >
+              {{ store.user?.cart.length }}
+            </span>
           </div>
 
           <div
@@ -72,10 +76,11 @@
 </template>
 
 <script setup lang="ts">
-import {useUserStore} from "~/stores/user";
-import {useStateStore} from "~/stores/state";
-import axios from "axios";
+import { useUserStore } from "~/stores/user";
+import { useStateStore } from "~/stores/state";
+import { useProductStore } from '~/stores/product'
 
+const productStore = useProductStore()
 const store = useUserStore()
 const state = useStateStore()
 
@@ -83,29 +88,16 @@ const showHeaderLogin = ref(false)
 const isFocusedInput = ref(false)
 const isFocusedCatalog = ref(false)
 
-const cartName = ref('Корзина')
-
-const fetchCartProducts = async () => {
-  if (!store.user?.cart.length) return
-
-  try {
-    const ids = store.user.cart.join(',')
-    const { data } = await axios.get('/api/products', {
-      params: { ids }
-    })
-
-    cartName.value = '$' + data.reduce((acc, cur) => acc + cur.price, 0).toLocaleString('ru-RU')
-  } catch (error) {
-    console.error('Failed to load cart products:', error)
-  }
-}
-
-const menu: { name: string, url: string, icon: string }[] = computed(() => {
-  return [
-    {name: 'Избранное', url: 'wishlist', icon: 'favorite'},
-    {name: cartName.value, url: 'cart', icon: 'cart'},
-  ]
+const cartName = computed(() => {
+  return state.cartTotalPrice > 0
+      ? state.cartTotalPrice.toLocaleString('ru-RU') + ' ₽'
+      : 'Корзина'
 })
+
+const menu = computed(() => [
+  { name: 'Избранное', url: 'wishlist', icon: 'favorite' },
+  { name: cartName.value, url: 'cart', icon: 'cart' }
+])
 
 const toggleFocus = () => {
   if (isFocusedInput.value) isFocusedInput.value = false;
@@ -114,9 +106,15 @@ const toggleFocus = () => {
   if (state.showAdminModal) state.showAdminModal = false;
 }
 
-watchEffect(() => {
-  if (store.user) {
-    fetchCartProducts()
+onMounted(() => {
+  if (store.user?._id) {
+    productStore.calculateCartTotal()
+  }
+})
+
+watch(() => store.user?._id, (newUserId) => {
+  if (newUserId) {
+    productStore.calculateCartTotal()
   }
 })
 </script>

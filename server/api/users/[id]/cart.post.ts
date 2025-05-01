@@ -1,18 +1,36 @@
+import mongoose from 'mongoose'
+
 export default defineEventHandler(async (event) => {
     const { id } = event.context.params
-    const { productId } = await readBody(event)
+    const { product } = await readBody(event)
 
     try {
-        const updatedUser = await User.findByIdAndUpdate(
-            id,
-            { $addToSet: { cart: productId } },
-            { new: true }
+        const user = await User.findById(id)
+
+        if (!user) {
+            return { message: 'User not found', _id: id }
+        }
+
+        const productIdStr = product._id.toString()
+
+        const existingItemIndex = user.cart.findIndex(
+            item => item.productId.toString() === productIdStr
         )
 
-        if (updatedUser) {
-            return { message: 'Product added to cart', user: updatedUser }
+        if (existingItemIndex !== -1) {
+            user.cart[existingItemIndex].count += product.count || 1
         } else {
-            return { message: 'User not found', _id: id }
+            user.cart.push({
+                productId: new mongoose.Types.ObjectId(product._id),
+                count: product.count || 1
+            })
+        }
+
+        await user.save()
+
+        return {
+            message: 'Cart updated',
+            user
         }
     } catch (error) {
         return {

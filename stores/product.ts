@@ -1,15 +1,19 @@
 import {defineStore} from 'pinia'
 import axios from "axios"
 import type {IProduct} from "~/types/catalog"
-import { useUserStore } from '~/stores/user'
-import { useStateStore } from '~/stores/state'
+import {useUserStore} from '~/stores/user'
+import {useStateStore} from '~/stores/state'
 
 export const useProductStore = defineStore('product', () => {
+    const state = useStateStore()
+    const userStore = useUserStore()
+    const route = useRoute()
+
     const product = ref<IProduct | null>(null)
     const products = ref<IProduct[]>([])
 
     const requestProduct = async () => {
-        const route = useRoute()
+
         const {data} = await axios.get(`/api/products/by-url/${route.params.url}`);
 
         product.value = data
@@ -22,18 +26,21 @@ export const useProductStore = defineStore('product', () => {
     }
 
     const updateList = async (type: 'wishlist' | 'cart', add: boolean, product: IProduct = null) => {
-        const state = useStateStore()
-        const userStore = useUserStore()
         const user = userStore.user
         const productId = product?._id
 
         if (type === 'cart') {
             if (!user) {
                 state.showLoginModal = true
-            } else {
-                navigateTo('/cart')
+                return
             }
-            return
+
+            const productInCart = user.cart?.some(item => item.productId === productId)
+
+            if (productInCart && route.path !== '/cart') {
+                navigateTo('/cart')
+                return
+            }
         }
 
         if (!user) {
@@ -48,21 +55,85 @@ export const useProductStore = defineStore('product', () => {
         }
 
         try {
+            state.isClicked = true
             const method = add ? 'post' : 'delete'
             const url = `/api/users/${user._id}/${type}`
 
-            const { data } = await axios({ method, url, data: { productId } })
-            userStore.user = data.user
+            const payload = type === 'cart'
+                ? { product: { _id: productId, quantity: 1 } }
+                : { productId }
+
+            const { data } = await axios({
+                method,
+                url,
+                data: payload
+            })
+
+            if (type === 'wishlist') {
+                userStore.user.wishlist = data.user.wishlist
+            } else if (type === 'cart') {
+                userStore.user.cart = data.user.cart
+                await calculateCartTotal()
+            }
+
+            await userStore.updateUser()
+
+            state.isClicked = false
+            state.showAdminModal = false
         } catch (err) {
             console.error(`Error updating ${type}:`, err)
         }
     }
 
+    const calculateCartTotal = async () => {
+        const cartItems = userStore.user?.cart || []
+
+        if (!cartItems.length) {
+            state.cartTotalPrice = 0
+            return
+        }
+
+        try {
+            const ids = cartItems.map(item => item.productId).join(',')
+            const { data: products } = await axios.get('/api/products', {
+                params: { ids }
+            })
+
+            let total = 0
+
+            for (const item of cartItems) {
+                const product = products.find(p => p._id === item.productId)
+                if (product) {
+                    total += product.price * item.quantity
+                }
+            }
+
+            state.cartTotalPrice = total
+        } catch (error) {
+            console.error('Error calculating cart total:', error)
+        }
+    }
+
+
+    const isInWishlist = (productId: string) => {
+        return (
+            userStore.user?.wishlist?.includes(productId) ||
+            userStore.tempWishlist.includes(productId)
+        )
+    }
+
+    const isInCart = (productId: string) => {
+        return userStore.user?.cart?.some(item => item.productId === productId)
+    }
+
     return {
         product,
         products,
+        isInWishlist,
+        isInCart,
         requestProduct,
         requestAllProducts,
-        updateList
+        updateList,
+        calculateCartTotal
     }
 })

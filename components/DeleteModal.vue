@@ -1,14 +1,20 @@
 <template>
   <div class="delete-modal">
-    <div class="modal-heading">Deleting entity</div>
-    <div class="delete-modal-text">Are you sure you want to delete <strong>{{ props.entity?.title }}</strong>?</div>
+    <div class="modal-heading">Удаление</div>
+    <div class="delete-modal-text">Вы точно хотите удалить
+      <span v-if="route.path === '/admin'">категорию </span>
+      <strong>{{ props.entity?.title }}</strong>
+      <span v-if="route.path === '/cart'"> из корзины</span>?
+    </div>
     <Icon name="cross" class="delete-modal-cross" @click="state.showAdminModal = false" />
     <div class="delete-modal-button-container">
       <button
           class="delete-modal-delete-button"
-          @click="deleteEntity(props.entity._id)"
+          @click="route.path === '/admin' ? deleteEntity(props.entity._id) : removeFromCart()"
           :disabled="state.isClicked"
-      >Delete</button>
+      >
+        Удалить
+      </button>
     </div>
   </div>
 </template>
@@ -18,8 +24,10 @@ import axios from "axios";
 import { useCatalogStore } from "~/stores/catalog"
 import {useStateStore} from "~/stores/state";
 import {useProductStore} from "~/stores/product"
+import {useRoute} from 'vue-router'
 
-const product = useProductStore()
+const productStore = useProductStore()
+const route = useRoute()
 const catalog = useCatalogStore()
 const state = useStateStore()
 
@@ -27,13 +35,17 @@ const props = defineProps({
   entity: {}
 })
 
+const isInCart = computed(() => productStore.isInCart(props.entity._id))
+
+const removeFromCart = () => productStore.updateList('cart', !isInCart.value, props.entity)
+
 const deleteEntity = async (id: string) => {
   if (props.entity.parentCategory === undefined) {
     try {
       state.isClicked = true
       const {data} = await axios.delete(`/api/products/${id}`)
       console.log(data)
-      await product.requestAllProducts()
+      await productStore.requestAllProducts()
       state.isClicked = false
       state.showAdminModal = false
     } catch (error) {

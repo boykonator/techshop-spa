@@ -14,7 +14,7 @@
       <span class="cart-content-text">Если у вас были товары в корзине – <a href="">войдите</a> в профиль</span>
     </div>
 
-    <div class="cart-content-grid" v-else>
+    <div class="cart-content-grid" v-if="products.length">
       <div class="cart-content">
         <div class="cart-content-select">
           <div class="cart-content-selector">
@@ -22,14 +22,17 @@
           </div>
           <div class="cart-content-delete-selected">Удалить выбранные</div>
         </div>
-        <CartProductCard :product="product" v-for="product of products" class="cart-content-item" />
+
+        <div class="cart-content-items">
+          <CartProductCard :product="product" v-for="product of products" />
+        </div>
       </div>
 
       <div class="cart-content-checkout">
         <div class="cart-content-title">Условия заказа</div>
 
         <div class="cart-content-tabs-wrapper">
-          <div class="cart-content-tab" :class="{'active-tab' : true}">Выгода до $5 000</div>
+          <div class="cart-content-tab" :class="{'active-tab' : true}">Выгода до 8 000 ₽</div>
           <div class="cart-content-tab">Рассрочка 0-0-24</div>
         </div>
 
@@ -51,12 +54,12 @@
 
           <div class="cart-content-price-container">
             <div class="cart-content-price-old">164 999 ₽</div>
-            <div class="cart-content-order-title">131 999 ₽</div>
+            <div class="cart-content-order-title">{{ state.cartTotalPrice?.toLocaleString('ru-RU') }} ₽</div>
           </div>
         </div>
 
         <div class="cart-content-purchase-button-container">
-          <button class="cart-content-purchase-button">Перейти к оформлению</button>
+          <button class="cart-content-purchase-button" @click="proceedToCheckout">Перейти к оформлению</button>
         </div>
 
         <div class="cart-content-delivery">
@@ -70,9 +73,11 @@
 </template>
 
 <script setup>
-import {useUserStore} from '~/stores/user'
 import axios from "axios";
+import {useUserStore} from '~/stores/user'
+import { useStateStore } from '~/stores/state'
 
+const state = useStateStore()
 const userStore = useUserStore()
 const products = ref([])
 
@@ -81,26 +86,41 @@ const productsWordEnding = computed(() => {
 })
 
 const fetchProducts = async () => {
-  if (!userStore.user || !userStore.user.cart?.length) return
+  if (!userStore.user) {
+    products.value = []
+    return
+  }
+
+  const idsArray = userStore.user.cart.map(item => item.productId)
+  if (!idsArray?.length) {
+    products.value = []
+    return
+  }
 
   try {
-    const ids = userStore.user?.wishlist.length ? userStore.user?.wishlist.map(item => item).join(',') : userStore.tempWishlist.map(item => item).join(',')
-    const {data} = await axios.get('/api/products', {
-      params: {
-        ids
-      }
+    const ids = idsArray.join(',')
+    const { data } = await axios.get('/api/products', {
+      params: { ids }
     })
 
-    console.log(data)
     products.value = data
   } catch (error) {
-    console.error('Failed to load wishlist products:', error)
+    console.error('Failed to load cart products:', error)
+    products.value = []
   }
 }
 
+const proceedToCheckout = async () => {
+  await userStore.syncCartWithServer()
+}
+
+onBeforeUnmount(() => {
+  userStore.syncCartWithServer()
+})
+
 onMounted(fetchProducts)
 
-watch(() => [userStore.isAuthenticated, userStore.user], () => {
+watch(() => [userStore.isAuthenticated, userStore.user?.wishlist, userStore.user?.cart], () => {
   fetchProducts()
 })
 </script>
@@ -121,25 +141,27 @@ watch(() => [userStore.isAuthenticated, userStore.user], () => {
   }
 
   &-content {
-    &-item {
-      background: #fff;
-      box-shadow: 0 2px 4px -2px $dark-gray;
-      height: auto;
-      width: auto;
-      font-size: 14px;
-      border-radius: 8px;
-      position: relative;
-      padding: 28px 24px;
+    &-items {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
 
     &-selector {
       display: flex;
       align-items: center;
+      cursor: pointer;
     }
 
     &-delete-selected {
       color: $dark-gray;
       cursor: pointer;
+      transition: 0.2s ease-in-out;
+
+      &:hover {
+        color: $secondary-color;
+        transition: 0.2s ease-in-out;
+      }
     }
 
     &-select {

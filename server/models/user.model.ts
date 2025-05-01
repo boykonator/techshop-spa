@@ -25,8 +25,11 @@ const UserSchema = new Schema({
     },
     cart: [
         {
-            type: Schema.Types.ObjectId,
-            ref: "ProductCard",
+            productId: {
+                type: Schema.Types.ObjectId,
+                ref: "ProductCard",
+            },
+            quantity: {type: Number, default: 1}
         }
     ],
     wishlist: [

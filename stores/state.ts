@@ -11,6 +11,9 @@ export const useStateStore = defineStore('state', () => {
     const deleteIndex = ref<string | null>(null)
     const editIndex = ref<string | null>(null)
 
+    const cartTotalPrice = ref<number | null>(null)
+    const cartTotalPriceBeforeDiscounts = ref<number | null>(null)
+
     const openModal = (type: 'add' | 'edit' | 'delete', index: string | null = null) => {
         showAdminModal.value = true
         isAddOrEdit.value = type === 'edit' ? 'edit' : type === 'add' ? 'add' : null
@@ -31,6 +34,8 @@ export const useStateStore = defineStore('state', () => {
         isAddOrEdit,
         deleteIndex,
         editIndex,
+        cartTotalPrice,
+        cartTotalPriceBeforeDiscounts,
         openModal,
         toggleLoginModal
     }

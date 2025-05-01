@@ -52,10 +52,10 @@
         <div class="catalog-content-card-action-price-container">
           <div class="catalog-content-card-action-price">
             <div class="catalog-content-card-action-price-tag">
-              ${{ product.price.toLocaleString('ru-RU') }}
+              {{ product.price.toLocaleString('ru-RU') }} ₽
             </div>
             <div class="catalog-content-card-action-price-sub">
-              от ${{ Math.trunc(product.price / 10).toLocaleString('ru-RU') }} / мес.
+              от {{ Math.trunc(product.price / 10).toLocaleString('ru-RU') }} ₽ / мес.
             </div>
           </div>
         </div>
@@ -122,6 +122,10 @@ const props = defineProps<{
 
 const emit = defineEmits(['update:selected'])
 
+const onCheckboxChange = (value: boolean) => {
+  emit('update:selected', value)
+}
+
 const isHovered = ref(false)
 const isButtonHovered = ref(false)
 const favoriteHovered = ref(false)
@@ -129,19 +133,9 @@ const favoriteHovered = ref(false)
 const onMouseEnter = () => (isHovered.value = true)
 const onMouseLeave = () => (isHovered.value = false)
 
-const onCheckboxChange = (value: boolean) => {
-  emit('update:selected', value)
-}
-
 const isSoldOut = computed(() => !props.product.stock)
-
-const isInWishlist = computed(() => {
-  return userStore.user?.wishlist?.includes(props.product._id) || userStore.tempWishlist.includes(props.product._id)
-})
-
-const isInCart = computed(() => {
-  return userStore.user?.cart?.includes(props.product._id)
-})
+const isInWishlist = computed(() => productStore.isInWishlist(props.product._id))
+const isInCart = computed(() => productStore.isInCart(props.product._id))
 
 const toggleFavorite = () => productStore.updateList('wishlist', !isInWishlist.value, props.product)
 const addToCart = () => productStore.updateList('cart', !isInCart.value, props.product)
