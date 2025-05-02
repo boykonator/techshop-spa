@@ -61,6 +61,7 @@ export interface IAddress {
 }
 
 export interface IOrder {
+    _id: string
     user: IUser
     items: IProduct[]
     totalPrice: number

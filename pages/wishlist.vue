@@ -25,7 +25,7 @@
     <div v-else class="wishlist-content">
       <div class="wishlist-content-info">
         <div class="wishlist-content-info-heading">
-          {{ products?.length }} {{ productsWordEnding }} на сумму: ${{ wishlistSum }}
+          {{ products?.length }} {{ productsWordEnding }} на сумму: {{ wishlistSum }} ₽
         </div>
 
         <div class="wishlist-content-info-content">
@@ -112,7 +112,7 @@ const getDateInAWeek = computed(() => {
 
 onMounted(fetchProducts)
 
-watch(() => [userStore.isAuthenticated, userStore.user], () => {
+watch(() => [userStore.isAuthenticated], () => {
   fetchProducts()
 })
 </script>

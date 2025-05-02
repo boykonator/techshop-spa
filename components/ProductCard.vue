@@ -4,11 +4,7 @@
       @mouseenter="onMouseEnter"
       @mouseleave="onMouseLeave"
   >
-    <div :class="['catalog-content-card', { 'sold-out-active': isSoldOut }]">
-      <div v-if="isSoldOut" class="sold-out">
-        <div class="sold-out-text">Нет в наличии</div>
-      </div>
-
+    <div class="catalog-content-card">
       <input
           type="checkbox"
           v-if="route.path === '/wishlist'"
@@ -80,7 +76,17 @@
           <Icon name="trash" v-if="route.path === '/cart'" />
 
           <button
-              v-if="!isInCart"
+              v-if="!product.stock"
+              :class="isButtonHovered ? 'hovered-button' : 'in-cart'"
+              @mouseenter="isButtonHovered = true"
+              @mouseleave="isButtonHovered = false"
+              disabled
+          >
+            Нет в наличии
+          </button>
+
+          <button
+              v-else-if="!isInCart"
               @click="addToCart"
               :class="isHovered && !isSoldOut ? 'hovered-button' : 'catalog-buy-button'"
           >
@@ -104,16 +110,11 @@
 
 <script setup lang="ts">
 import type {IProduct} from "~/types/catalog"
-import { useUserStore } from '~/stores/user'
-import { useStateStore } from '~/stores/state'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import {useProductStore} from "~/stores/product"
 
 const productStore = useProductStore()
-const state = useStateStore()
-const userStore = useUserStore()
 const route = useRoute()
-const router = useRouter()
 
 const props = defineProps<{
   product: IProduct

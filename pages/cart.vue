@@ -2,16 +2,19 @@
   <div class="cart">
     <div class="cart-title">
       Корзина
-      <span class="cart-products-count" v-if="products.length"> {{products.length}} {{ productsWordEnding }}</span>
+      <span class="cart-products-count" v-if="products.length"> {{ products.length }} {{ productsWordEnding }}</span>
     </div>
 
-    <div class="cart-content-empty" v-if="!products.length">
-      <div class="cart-content-image">
+    <div  class="cart-content-empty" v-if="!products.length && orderCreated">
+      <div class="cart-content-image"></div>
+      <h1>Cпасибо за заказ :)</h1>
+    </div>
 
-      </div>
+    <div class="cart-content-empty" v-if="!products.length && !orderCreated">
+      <div class="cart-content-image"></div>
       <h1>Пока пусто</h1>
-      <span class="cart-content-text">Воспользуйтесь <a href="catalog">каталогом</a> или поиском</span>
-      <span class="cart-content-text">Если у вас были товары в корзине – <a href="">войдите</a> в профиль</span>
+      <span class="cart-content-text">Воспользуйтесь <a href="catalog">каталогом</a> или поиском :)</span>
+      <span class="cart-content-text" v-if="!userStore.user">Если у вас были товары в корзине – <a href="">войдите</a> в профиль</span>
     </div>
 
     <div class="cart-content-grid" v-if="products.length">
@@ -24,7 +27,12 @@
         </div>
 
         <div class="cart-content-items">
-          <CartProductCard :product="product" v-for="product of products" />
+          <CartProductCard
+              v-for="product of products"
+              :key="product._id"
+              :product="product"
+              :quantity="getProductQuantity(product)"
+          />
         </div>
       </div>
 
@@ -32,12 +40,12 @@
         <div class="cart-content-title">Условия заказа</div>
 
         <div class="cart-content-tabs-wrapper">
-          <div class="cart-content-tab" :class="{'active-tab' : true}">Выгода до 8 000 ₽</div>
+          <div class="cart-content-tab" :class="{'active-tab' : true}">Выгода до 70 000 ₽</div>
           <div class="cart-content-tab">Рассрочка 0-0-24</div>
         </div>
 
         <div class="cart-content-bonus">
-          Выгода 33 000 ₽
+          Выгода 69 458 ₽
           <div class="annotation">по акции</div>
         </div>
 
@@ -53,13 +61,29 @@
           </div>
 
           <div class="cart-content-price-container">
-            <div class="cart-content-price-old">164 999 ₽</div>
-            <div class="cart-content-order-title">{{ state.cartTotalPrice?.toLocaleString('ru-RU') }} ₽</div>
+            <div class="cart-content-price-old">625 003 ₽</div>
+            <div class="cart-content-order-title">
+              {{ typeof state.cartTotalPrice === 'number' ? state.cartTotalPrice.toLocaleString('ru-RU') + ' ₽' : '0 ₽' }}
+            </div>
           </div>
         </div>
 
         <div class="cart-content-purchase-button-container">
-          <button class="cart-content-purchase-button" @click="proceedToCheckout">Перейти к оформлению</button>
+          <button class="cart-content-purchase-button"
+                  @click="checkout"
+                  :disabled="!areProductsAvailable"
+                  @mouseenter="isPurchaseButtonHovered = true"
+                  @mouseleave="isPurchaseButtonHovered = false"
+          >Перейти к оформлению
+          </button>
+
+          <div v-if="!areProductsAvailable && isPurchaseButtonHovered" class="cart-content-purchase-annotation">
+            Не все товары есть в выбранном количестве. <br><br>
+            Вы можете приобрести:
+            <div v-for="item in unavailableProducts" :key="item.productId">
+              {{ getProductTitle(item.productId) }} — <strong> {{ getProductStock(item.productId) ? `максимум ${getProductStock(item.productId)} шт.` : 'нет в наличии' }}</strong>
+            </div>
+          </div>
         </div>
 
         <div class="cart-content-delivery">
@@ -73,16 +97,37 @@
 </template>
 
 <script setup>
-import axios from "axios";
-import {useUserStore} from '~/stores/user'
+import axios from "axios"
+import { useUserStore } from '~/stores/user'
 import { useStateStore } from '~/stores/state'
 
 const state = useStateStore()
 const userStore = useUserStore()
 const products = ref([])
 
+const orderCreated = ref(false)
+
+const isPurchaseButtonHovered = ref(false)
+
+const areProductsAvailable = computed(() => {
+  if (!products.value.length) return false
+
+  return userStore.user?.cart.every(cartItem => {
+    const product = products.value.find(product => product._id === cartItem.productId)
+    return product && product.stock >= cartItem.quantity
+  })
+})
+
+const unavailableProducts = computed(() => {
+  return userStore.user?.cart.filter(cartItem => {
+    const product = products.value.find(p => p._id === cartItem.productId)
+    return !product || product.stock < cartItem.quantity
+  }) || []
+})
+
 const productsWordEnding = computed(() => {
-  return products.value?.length === 1 ? 'товар' : products.value?.length > 1 && products.value?.length < 5 ? 'товара' : 'товаров'
+  const count = products.value.length
+  return count === 1 ? 'товар' : count > 1 && count < 5 ? 'товара' : 'товаров'
 })
 
 const fetchProducts = async () => {
@@ -110,15 +155,68 @@ const fetchProducts = async () => {
   }
 }
 
-const proceedToCheckout = async () => {
-  await userStore.syncCartWithServer()
+const checkout = async () => {
+  await userStore.syncCartWithServer('push')
+
+  const items = await Promise.all(
+      userStore.user.cart.map(async (item) => {
+        const matchedProduct = products.value.find(product => product._id === item.productId)
+
+        await axios.patch(`/api/products/${matchedProduct._id}`, {
+          stock: matchedProduct.stock - item.quantity
+        })
+
+        return {
+          product: matchedProduct._id,
+          quantity: item.quantity,
+          price: matchedProduct.price
+        }
+      })
+  )
+
+  const order = {
+    user: userStore.user._id,
+    items,
+    totalPrice: state.cartTotalPrice
+  }
+
+  const { data: createdOrder } = await axios.post('/api/orders', order)
+
+  await axios.patch(`/api/users/${userStore.user._id}`, {
+    $push: { orders: createdOrder._id }
+  })
+
+  await axios.patch(`/api/users/${userStore.user._id}/cart`, {
+    cart: []
+  })
+
+  userStore.user.cart = []
+
+  orderCreated.value = true
+
+  await userStore.updateUser()
+
+  await fetchProducts()
 }
 
-onBeforeUnmount(() => {
-  userStore.syncCartWithServer()
-})
 
-onMounted(fetchProducts)
+const getProductQuantity = (product) => {
+  const cartItem = userStore.user?.cart.find(item => item.productId === product._id)
+  return cartItem?.quantity || 1
+}
+
+const getProductTitle = (productId) => {
+  return products.value.find(p => p._id === productId)?.title || 'Неизвестный товар'
+}
+
+const getProductStock = (productId) => {
+  return products.value.find(p => p._id === productId)?.stock || 0
+}
+
+onMounted(async () => {
+  await userStore.syncCartWithServer('pull')
+  await fetchProducts()
+})
 
 watch(() => [userStore.isAuthenticated, userStore.user?.wishlist, userStore.user?.cart], () => {
   fetchProducts()
@@ -312,19 +410,32 @@ watch(() => [userStore.isAuthenticated, userStore.user?.wishlist, userStore.user
       }
     }
 
-    &-purchase-button {
-      width: 100%;
-      white-space: nowrap;
-      height: 64px;
-      font-size: 16px;
-      font-weight: 700;
+    &-purchase {
+      &-annotation {
+        color: #ffffff;
+        font-size: 14px;
+        background: $slate-gray;
+        position: absolute;
+        top: 68px;
+        padding: 8px;
+        border-radius: 8px;
+      }
 
-      &-container {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        padding: 0 16px 16px;
+      &-button {
+        width: 100%;
+        white-space: nowrap;
+        height: 64px;
+        font-size: 16px;
+        font-weight: 700;
+
+        &-container {
+          position: relative;
+          padding: 0 16px 16px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
       }
     }
 

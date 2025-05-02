@@ -37,6 +37,7 @@ export const useProductStore = defineStore('product', () => {
 
             const productInCart = user.cart?.some(item => item.productId === productId)
 
+            if (add && productInCart) return
             if (productInCart && route.path !== '/cart') {
                 navigateTo('/cart')
                 return
@@ -45,17 +46,14 @@ export const useProductStore = defineStore('product', () => {
 
         if (!user) {
             const index = userStore.tempWishlist.indexOf(productId)
-
-            if (add && index === -1) {
-                userStore.tempWishlist.push(productId)
-            } else if (!add && index !== -1) {
-                userStore.tempWishlist.splice(index, 1)
-            }
+            if (add && index === -1) userStore.tempWishlist.push(productId)
+            else if (!add && index !== -1) userStore.tempWishlist.splice(index, 1)
             return
         }
 
         try {
             state.isClicked = true
+
             const method = add ? 'post' : 'delete'
             const url = `/api/users/${user._id}/${type}`
 
@@ -63,20 +61,16 @@ export const useProductStore = defineStore('product', () => {
                 ? { product: { _id: productId, quantity: 1 } }
                 : { productId }
 
-            const { data } = await axios({
-                method,
-                url,
-                data: payload
-            })
+            const { data } = await axios({ method, url, data: payload })
 
             if (type === 'wishlist') {
                 userStore.user.wishlist = data.user.wishlist
             } else if (type === 'cart') {
                 userStore.user.cart = data.user.cart
                 await calculateCartTotal()
-            }
 
-            await userStore.updateUser()
+                await userStore.syncCartWithServer('push')
+            }
 
             state.isClicked = false
             state.showAdminModal = false
@@ -89,7 +83,7 @@ export const useProductStore = defineStore('product', () => {
         const cartItems = userStore.user?.cart || []
 
         if (!cartItems.length) {
-            state.cartTotalPrice = 0
+            state.setProducts([])
             return
         }
 
@@ -99,21 +93,13 @@ export const useProductStore = defineStore('product', () => {
                 params: { ids }
             })
 
-            let total = 0
+            state.setProducts(products)
 
-            for (const item of cartItems) {
-                const product = products.find(p => p._id === item.productId)
-                if (product) {
-                    total += product.price * item.quantity
-                }
-            }
-
-            state.cartTotalPrice = total
         } catch (error) {
             console.error('Error calculating cart total:', error)
+            state.setProducts([])
         }
     }
-
 
     const isInWishlist = (productId: string) => {
         return (

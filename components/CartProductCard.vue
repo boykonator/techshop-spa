@@ -69,14 +69,14 @@
         <div class="cart-product-price-section">
           <div class="cart-product-price-container">
             <span class="cart-product-price-section-old-price">
-              {{ ((product.price + discount) * count).toLocaleString('ru-RU') }} ₽
+              {{ (Math.trunc((product.price + discount) * count)).toLocaleString('ru-RU') }} ₽
             </span>
             <span class="cart-product-price-section-actual-price">
               {{ (product.price * count).toLocaleString('ru-RU') }} ₽
             </span>
           </div>
           <div class="cart-product-price-section-discount">
-            выгода {{ (discount * count).toLocaleString('ru-RU') }} ₽
+            выгода {{ (Math.trunc(discount * count)).toLocaleString('ru-RU') }} ₽
           </div>
         </div>
       </div>
@@ -85,9 +85,9 @@
 </template>
 
 <script setup lang="ts">
-import { useProductStore } from "~/stores/product";
-import { useStateStore } from "~/stores/state";
-import { useUserStore } from "~/stores/user";
+import { useProductStore } from "~/stores/product"
+import { useStateStore } from "~/stores/state"
+import { useUserStore } from "~/stores/user"
 
 const userStore = useUserStore()
 const state = useStateStore()
@@ -98,31 +98,26 @@ const props = defineProps({
 })
 
 const product = computed(() => props.product)
-const discount = Math.random() * 10000;
+const discount = Math.random() * 10000
 
 const cartItem = computed(() => userStore.user?.cart?.find((item) => item.productId === product.value._id))
+const count = ref(cartItem.value?.quantity || 1)
 
-const count = computed({
-  get() {
-    return cartItem.value?.quantity || 1;
-  },
-  set(newVal) {
-    if (cartItem.value) {
-      const diff = newVal - cartItem.value.quantity
-      cartItem.value.quantity = newVal
-      state.cartTotalPrice += diff * product.value.price
-    }
+watch(count, (newVal) => {
+  if (cartItem.value) {
+    cartItem.value.quantity = newVal
+    userStore.syncCartWithServer('push')
   }
 })
 
 const counter = (action: '+' | '-') => {
   if (action === '+' && count.value < product.value.stock) {
-    count.value++;
+    count.value++
   }
   if (action === '-' && count.value > 1) {
-    count.value--;
+    count.value--
   }
-};
+}
 
 const isInWishlist = computed(() =>
     productStore.isInWishlist(product.value._id)
